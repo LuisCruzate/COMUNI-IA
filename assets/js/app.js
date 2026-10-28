@@ -185,6 +185,12 @@
   window.addEventListener("online",()=>{$("#connectionText").textContent="Conexión disponible";});
   window.addEventListener("offline",()=>{$("#connectionText").textContent="Modo sin conexión";});
 
+  
+   document.addEventListener('comuni:frase-aceptada', (evento) => {
+    const fraseAceptada = evento.detail.frase;
+    // Llama a tu función existente para agregar la frase al mensaje
+    addPhrase(fraseAceptada); 
+  });
   // Arrancar la app
   init();
 })();

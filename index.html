@@ -7,6 +7,7 @@
   <meta name="description" content="COMUNI-AI: herramienta de comunicación aumentativa y alternativa.">
   <title>COMUNI-AI | Tus palabras, a tu ritmo</title>
   <link rel="manifest" href="manifest.webmanifest">
+  <!-- Ruta corregida para GitHub Pages -->
   <link rel="stylesheet" href="assets/css/styles.css">
 </head>
 <body>
@@ -95,8 +96,83 @@
           <div class="pictogram-grid" id="pictogramGrid" aria-label="Pictogramas disponibles"></div>
           <p class="board-note">Este tablero es una muestra para el prototipo. Los pictogramas pueden personalizarse según las necesidades de cada persona.</p>
         </section>
+
+        <!-- ======================================================= -->
+        <!-- AQUÍ EMPIEZA EL CÓDIGO DEL ASISTENTE IA (Avatar Lip-Sync) -->
+        <!-- ======================================================= -->
+        <aside class="ia-panel" id="asistente-ia" aria-labelledby="ia-titulo">
+          <header class="ia-panel__cabecera">
+            <h2 id="ia-titulo">Asistente IA</h2>
+            <button type="button" class="ia-btn ia-btn--suave" id="ia-silenciar" aria-pressed="false">
+              <span aria-hidden="true">🔊</span> Voz activada
+            </button>
+          </header>
+
+          <div class="ia-escena">
+            <!-- Burbuja: texto exacto que se está pronunciando -->
+            <div class="ia-burbuja">
+              <p class="ia-burbuja__texto" id="ia-texto-vivo" aria-live="off">
+                Hola, soy Comuni. Escribe "Quiero ir..." y te ayudo a completar la frase.
+              </p>
+            </div>
+
+            <!-- Avatar SVG -->
+            <svg class="ia-avatar" id="ia-avatar" viewBox="0 0 200 200" role="img"
+                 aria-label="Avatar del asistente Comuni, una cara sonriente">
+              <circle cx="100" cy="100" r="96" fill="#DCEFEA"/>
+              <!-- cabello y orejas -->
+              <circle cx="31" cy="108" r="11" fill="#E8B88C"/>
+              <circle cx="169" cy="108" r="11" fill="#E8B88C"/>
+              <circle cx="100" cy="106" r="68" fill="#F2C9A0"/>
+              <path d="M31 98 C28 38 172 38 169 98 C150 68 118 66 100 70 C82 66 50 68 31 98Z" fill="#1D4E89"/>
+              <!-- mejillas -->
+              <circle cx="62" cy="128" r="10" fill="#F4A38C" opacity=".45"/>
+              <circle cx="138" cy="128" r="10" fill="#F4A38C" opacity=".45"/>
+              <!-- cejas -->
+              <path d="M58 86 Q72 78 86 86" fill="none" stroke="#1F2937" stroke-width="4" stroke-linecap="round"/>
+              <path d="M114 86 Q128 78 142 86" fill="none" stroke="#1F2937" stroke-width="4" stroke-linecap="round"/>
+              <!-- ojos -->
+              <g class="ia-ojos">
+                <circle cx="72" cy="104" r="9" fill="#1F2937"/>
+                <circle cx="128" cy="104" r="9" fill="#1F2937"/>
+                <circle cx="75" cy="101" r="3" fill="#fff"/>
+                <circle cx="131" cy="101" r="3" fill="#fff"/>
+              </g>
+              <!-- nariz -->
+              <path d="M96 118 Q100 124 104 118" fill="none" stroke="#C98F66" stroke-width="3" stroke-linecap="round"/>
+              <!-- boca (labios) -->
+              <g class="ia-boca">
+                <ellipse class="ia-boca__interior" cx="100" cy="144" rx="19" ry="11" fill="#5B1A1A"/>
+                <ellipse class="ia-boca__lengua" cx="100" cy="150" rx="9" ry="4" fill="#D9776B"/>
+                <path class="ia-labio ia-labio--sup" d="M80 144 Q90 136 100 139 Q110 136 120 144 Q100 148 80 144Z" fill="#B45346"/>
+                <path class="ia-labio ia-labio--inf" d="M82 145 Q100 160 118 145 Q100 152 82 145Z" fill="#B45346"/>
+              </g>
+            </svg>
+          </div>
+
+          <!-- Chat -->
+          <ul class="ia-log" id="ia-log" role="log" aria-live="polite" aria-label="Conversación con el asistente"></ul>
+
+          <div class="ia-sugerencias" id="ia-sugerencias" aria-label="Sugerencias de frases"></div>
+
+          <form class="ia-form" id="ia-form" autocomplete="off">
+            <label for="ia-entrada" class="ia-sr">Escribe para el asistente</label>
+            <input type="text" id="ia-entrada" class="ia-entrada" placeholder='Prueba: "Quiero ir"' inputmode="text">
+            <button type="submit" class="ia-btn ia-btn--primario">Enviar</button>
+          </form>
+
+          <div class="ia-acciones">
+            <button type="button" class="ia-btn ia-btn--suave" id="ia-repetir">🔁 Escuchar de nuevo</button>
+            <button type="button" class="ia-btn ia-btn--alerta" id="ia-detener">⏹ Detener</button>
+          </div>
+        </aside>
+        <!-- ======================================================= -->
+        <!-- FIN DEL ASISTENTE IA -->
+        <!-- ======================================================= -->
+
       </section>
 
+      <!-- VISTA: MIS FRASES -->
       <section class="view" id="view-phrases" aria-labelledby="phrasesTitle">
         <div class="page-header"><p class="eyebrow">PERSONALIZACIÓN</p><h1 id="phrasesTitle">Mis frases</h1><p class="lead">Guarda expresiones que usas con frecuencia para encontrarlas más rápido.</p></div>
         <div class="simple-card">
@@ -105,11 +181,13 @@
         </div>
       </section>
 
+      <!-- VISTA: HISTORIAL -->
       <section class="view" id="view-history" aria-labelledby="historyTitle">
         <div class="page-header"><p class="eyebrow">EN ESTE DISPOSITIVO</p><h1 id="historyTitle">Historial reciente</h1><p class="lead">Consulta las acciones registradas en esta sesión de prueba.</p></div>
         <div class="simple-card"><div class="card-heading"><h2>Actividad</h2><button class="text-button danger-text" id="clearHistoryButton" type="button">Borrar historial</button></div><div id="historyList" class="history-list"></div><p class="privacy-note">El prototipo registra acciones de prueba localmente. Evita introducir información personal o sensible.</p></div>
       </section>
 
+      <!-- VISTA: ADMINISTRACIÓN -->
       <section class="view" id="view-admin" aria-labelledby="adminTitle">
         <div class="page-header"><p class="eyebrow">SOLO PARA EL EQUIPO</p><h1 id="adminTitle">Área de investigación</h1><p class="lead">Panel demostrativo para revisar métricas básicas del prototipo.</p></div>
         <div class="admin-notice"><strong>Modo de demostración</strong><span>No hay conexión con un servidor. Los datos se mantienen en este navegador.</span></div>
@@ -120,10 +198,14 @@
       <footer class="footer"><span>COMUNI-AI · Prototipo de comunicación aumentativa</span><span>Diseñado para ser claro, accesible y fácil de usar</span></footer>
     </main>
   </div>
+  
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  
+  <!-- SCRIPTS -->
   <script src="assets/js/db.js"></script>
   <script src="assets/js/translator.js"></script>
   <script src="assets/js/predictor.js"></script>
+  <script src="assets/js/ia_avatar.js" defer></script>
   <script src="assets/js/app.js" defer></script>
   <script>
     if ('serviceWorker' in navigator && location.protocol !== 'file:') {
