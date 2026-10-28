@@ -1,0 +1,17 @@
+# Dependencias y entorno
+node_modules/
+.env
+.env.local
+.DS_Store
+Thumbs.db
+
+# Archivos de sistema y editores
+.vscode/
+.idea/
+*.log
+
+# Carpetas de compilación de Android (para cuando pases a Android Studio)
+build/
+.gradle/
+*.apk
+*.aab

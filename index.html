@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1D4E89">
+  <meta name="description" content="COMUNI-AI: herramienta de comunicación aumentativa y alternativa.">
+  <title>COMUNI-AI | Tus palabras, a tu ritmo</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Saltar al contenido principal</a>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="COMUNI-AI, inicio">
+      <span class="brand-mark" aria-hidden="true">C<span>+</span></span>
+      <span class="brand-copy"><strong>COMUNI-AI</strong><small>Tus palabras, a tu ritmo</small></span>
+    </a>
+    <div class="top-actions">
+      <span class="offline-status"><span class="status-dot"></span><span id="connectionText">Disponible en este dispositivo</span></span>
+      <button class="icon-button" id="contrastToggle" type="button" aria-pressed="false" aria-label="Activar alto contraste" title="Alto contraste">◐</button>
+      <button class="profile-chip" id="profileButton" type="button"><span class="avatar">P1</span><span>Perfil de prueba</span><span aria-hidden="true">⌄</span></button>
+    </div>
+  </header>
+
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Navegación principal">
+      <p class="side-label">ESPACIO DE COMUNICACIÓN</p>
+      <button class="nav-item active" data-view="communicate" type="button"><span class="nav-icon">▦</span> Comunicar</button>
+      <button class="nav-item" data-view="phrases" type="button"><span class="nav-icon">☷</span> Mis frases</button>
+      <button class="nav-item" data-view="history" type="button"><span class="nav-icon">↶</span> Historial</button>
+      <div class="sidebar-bottom">
+        <div class="support-card">
+          <span class="support-icon" aria-hidden="true">✦</span>
+          <strong>Tu voz importa</strong>
+          <p>Construye tus mensajes a tu manera. No hay una forma única de comunicar.</p>
+        </div>
+        <button class="nav-item" data-view="admin" type="button"><span class="nav-icon">⚙</span> Área de investigación</button>
+        <p class="version">Prototipo académico · Fase de diseño</p>
+      </div>
+    </aside>
+
+    <main id="main" class="main-content">
+      <section class="view active" id="view-communicate" aria-labelledby="pageTitle">
+        <div class="welcome-row">
+          <div>
+            <p class="eyebrow">ESPACIO PERSONAL</p>
+            <h1 id="pageTitle">¿Qué quieres decir hoy?</h1>
+            <p class="lead">Toca una imagen, escribe una palabra o elige una frase para empezar.</p>
+          </div>
+          <div class="date-pill"><span aria-hidden="true">☀</span> Comunicación sin prisa</div>
+        </div>
+
+        <section class="message-card" aria-labelledby="messageHeading">
+          <div class="message-card-top">
+            <div><span class="step-label">TU MENSAJE</span><h2 id="messageHeading">Vamos construyéndolo</h2></div>
+            <button class="text-button" id="undoButton" type="button" disabled>↶ Deshacer</button>
+          </div>
+          <div class="message-composition" id="messageTokens" aria-live="polite" aria-label="Mensaje en construcción">
+            <span class="empty-message">Tus palabras aparecerán aquí…</span>
+          </div>
+          <div class="message-controls">
+            <label class="sr-only" for="typedWord">Escribe una palabra o frase</label>
+            <input id="typedWord" type="text" maxlength="100" placeholder="También puedes escribir aquí…" autocomplete="off">
+            <button class="button button-secondary" id="addWordButton" type="button">Añadir palabra</button>
+            <button class="button button-primary" id="speakButton" type="button"><span aria-hidden="true">🔊</span> Hablar</button>
+          </div>
+          <p class="helper-text" id="speechStatus" role="status">Puedes escuchar el mensaje antes de compartirlo.</p>
+        </section>
+
+        <section class="suggestions-section" aria-labelledby="suggestionTitle">
+          <div class="section-heading">
+            <div><p class="eyebrow">UNA AYUDA, SI LA NECESITAS</p><h2 id="suggestionTitle">Quizás quieres decir…</h2></div>
+            <span class="small-tag">Sugerencias de ejemplo</span>
+          </div>
+          <div class="suggestion-list" id="suggestionList">
+            <button class="suggestion" data-suggestion="Quiero agua"><span class="suggestion-emoji">💧</span><span><strong>Quiero agua</strong><small>Necesidad · cotidiana</small></span><span class="suggestion-add">+</span></button>
+            <button class="suggestion" data-suggestion="Necesito ayuda"><span class="suggestion-emoji">🙋</span><span><strong>Necesito ayuda</strong><small>Apoyo · cotidiana</small></span><span class="suggestion-add">+</span></button>
+            <button class="suggestion" data-suggestion="Quiero descansar"><span class="suggestion-emoji">🌿</span><span><strong>Quiero descansar</strong><small>Bienestar · cotidiana</small></span><span class="suggestion-add">+</span></button>
+          </div>
+        </section>
+
+        <section class="board-section" aria-labelledby="boardTitle">
+          <div class="section-heading board-heading">
+            <div><p class="eyebrow">TABLERO DE COMUNICACIÓN</p><h2 id="boardTitle">Elige una categoría</h2></div>
+            <label class="search-box"><span aria-hidden="true">⌕</span><input id="pictogramSearch" type="search" placeholder="Buscar palabra…" aria-label="Buscar pictogramas"></label>
+          </div>
+          <div class="category-tabs" role="group" aria-label="Categorías de pictogramas">
+            <button class="category-tab active" data-category="todo" type="button">Todo</button>
+            <button class="category-tab" data-category="necesidades" type="button">Necesidades</button>
+            <button class="category-tab" data-category="personas" type="button">Personas</button>
+            <button class="category-tab" data-category="emociones" type="button">Emociones</button>
+            <button class="category-tab" data-category="actividades" type="button">Actividades</button>
+          </div>
+          <div class="pictogram-grid" id="pictogramGrid" aria-label="Pictogramas disponibles"></div>
+          <p class="board-note">Este tablero es una muestra para el prototipo. Los pictogramas pueden personalizarse según las necesidades de cada persona.</p>
+        </section>
+      </section>
+
+      <section class="view" id="view-phrases" aria-labelledby="phrasesTitle">
+        <div class="page-header"><p class="eyebrow">PERSONALIZACIÓN</p><h1 id="phrasesTitle">Mis frases</h1><p class="lead">Guarda expresiones que usas con frecuencia para encontrarlas más rápido.</p></div>
+        <div class="simple-card">
+          <form id="phraseForm" class="phrase-form"><label for="newPhrase">Nueva frase</label><div class="inline-form"><input id="newPhrase" maxlength="150" placeholder="Ej. Quiero hablar con mi familia" required><button class="button button-primary" type="submit">Guardar frase</button></div></form>
+          <div id="savedPhrases" class="saved-phrases"></div>
+        </div>
+      </section>
+
+      <section class="view" id="view-history" aria-labelledby="historyTitle">
+        <div class="page-header"><p class="eyebrow">EN ESTE DISPOSITIVO</p><h1 id="historyTitle">Historial reciente</h1><p class="lead">Consulta las acciones registradas en esta sesión de prueba.</p></div>
+        <div class="simple-card"><div class="card-heading"><h2>Actividad</h2><button class="text-button danger-text" id="clearHistoryButton" type="button">Borrar historial</button></div><div id="historyList" class="history-list"></div><p class="privacy-note">El prototipo registra acciones de prueba localmente. Evita introducir información personal o sensible.</p></div>
+      </section>
+
+      <section class="view" id="view-admin" aria-labelledby="adminTitle">
+        <div class="page-header"><p class="eyebrow">SOLO PARA EL EQUIPO</p><h1 id="adminTitle">Área de investigación</h1><p class="lead">Panel demostrativo para revisar métricas básicas del prototipo.</p></div>
+        <div class="admin-notice"><strong>Modo de demostración</strong><span>No hay conexión con un servidor. Los datos se mantienen en este navegador.</span></div>
+        <div class="metrics-grid"><article class="metric-card"><span>Palabras seleccionadas</span><strong id="metricSelections">0</strong><small>En esta sesión</small></article><article class="metric-card"><span>Sugerencias aceptadas</span><strong id="metricAccepted">0</strong><small>Interacciones de prueba</small></article><article class="metric-card"><span>Mensajes hablados</span><strong id="metricSpoken">0</strong><small>Usos del botón Hablar</small></article></div>
+        <div class="simple-card"><div class="card-heading"><div><h2>Datos de demostración</h2><p>Exporta un resumen básico en CSV para revisar el flujo.</p></div><button class="button button-primary" id="exportButton" type="button">Exportar CSV</button></div><p class="privacy-note">Antes de una evaluación real, se deben definir permisos, consentimiento informado, retención de datos y medidas de protección conforme al protocolo de investigación.</p></div>
+      </section>
+
+      <footer class="footer"><span>COMUNI-AI · Prototipo de comunicación aumentativa</span><span>Diseñado para ser claro, accesible y fácil de usar</span></footer>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="assets/js/db.js"></script>
+  <script src="assets/js/translator.js"></script>
+  <script src="assets/js/predictor.js"></script>
+  <script src="assets/js/app.js" defer></script>
+  <script>
+    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+    }
+  </script>
+</body>
+</html>
