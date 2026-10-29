@@ -20,18 +20,17 @@
   let voz = null;
   let vozActiva = true;
   let ultimoTexto = vivo.textContent.trim();
-  let actual = null;           // utterance en curso (evita bugs de GC y eventos de cancelaciones)
-  let palabras = [];           // [{inicio, fin, el}]
+  let actual = null;
+  let palabras = [];
   let hubeBoundary = false;
   let timerPalabras = null;
   let timerSim = null;
 
-  /* ---------- Utilidades ---------- */
   const sinAcentos = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
   function velocidad() {
     try {
-      const v = parseFloat(localStorage.getItem('comuni_velocidad_voz')); // ajusta la clave a tu configuración
+      const v = parseFloat(localStorage.getItem('comuni_velocidad_voz'));
       if (v >= 0.5 && v <= 1.5) return v;
     } catch (_) {}
     return 0.9;
@@ -53,7 +52,6 @@
     synth.addEventListener('voiceschanged', elegirVoz);
   }
 
-  /* ---------- Burbuja de texto en tiempo real ---------- */
   function pintarTexto(texto) {
     vivo.textContent = '';
     palabras = [];
@@ -81,7 +79,6 @@
     }
   }
 
-  /* ---------- Estado del avatar ---------- */
   function empezar(rate) {
     avatar.style.setProperty('--ia-ritmo', (0.3 / rate).toFixed(2) + 's');
     avatar.classList.add('hablando');
@@ -100,7 +97,6 @@
     });
   }
 
-  // Respaldo cuando el navegador no emite onboundary: avanza por temporizador
   function resaltadoPorTemporizador(rate) {
     let i = 0;
     const ms = 420 / rate;
@@ -112,7 +108,6 @@
     }, ms);
   }
 
-  /* ---------- Hablar ---------- */
   function detener() {
     actual = null;
     if (synth) synth.cancel();
@@ -123,11 +118,11 @@
     detener();
     ultimoTexto = texto;
     pintarTexto(texto);
-    if (!vozActiva) return;                       // modo silencio: solo texto
+    if (!vozActiva) return;
 
     const rate = velocidad();
 
-    if (!synth) {                                 // navegador sin voz: se anima la boca igualmente
+    if (!synth) {
       empezar(rate);
       resaltadoPorTemporizador(rate);
       timerSim = setTimeout(terminar, (palabras.length * 420) / rate + 300);
@@ -161,10 +156,9 @@
     u.onerror = () => { if (actual === u) { actual = null; terminar(); } };
 
     actual = u;
-    setTimeout(() => { if (actual === u) synth.speak(u); }, 60); // evita bug de Chrome tras cancel()
+    setTimeout(() => { if (actual === u) synth.speak(u); }, 60);
   }
 
-  /* ---------- Chat ---------- */
   function agregar(rol, texto) {
     const li = document.createElement('li');
     li.className = 'ia-msg ia-msg--' + rol;
@@ -179,7 +173,6 @@
     else { detener(); ultimoTexto = texto; pintarTexto(texto); }
   }
 
-  /* ---------- Sugerencias (offline, sin servidor) ---------- */
   const SUGERENCIAS = {
     'quiero ir': ['a casa', 'al baño', 'al médico', 'a la escuela'],
     'quiero': ['agua', 'comer', 'descansar', 'ir al baño'],
@@ -214,7 +207,6 @@
     const f = frase.charAt(0).toUpperCase() + frase.slice(1);
     agregar('usuario', f);
     zonaSug.textContent = '';
-    // Tu app puede escuchar este evento y poner la frase en el área de mensaje
     document.dispatchEvent(new CustomEvent('comuni:frase-aceptada', { detail: { frase: f } }));
     decirComoIA(`Listo: "${f}".`);
   }
@@ -229,7 +221,6 @@
     return true;
   }
 
-  /* ---------- Eventos ---------- */
   form && form.addEventListener('submit', (e) => {
     e.preventDefault();
     const t = entrada.value.trim();
@@ -256,20 +247,5 @@
 
   window.addEventListener('pagehide', detener);
 
-  /* ---------- API pública para integrarlo con tu app ---------- */
-  // Vincula tu área de mensaje: sugiere en silencio mientras el usuario escribe.
-  function vincularMensaje(selector) {
-    const campo = document.querySelector(selector);
-    if (!campo) return;
-    let t;
-    campo.addEventListener('input', () => {
-      clearTimeout(t);
-      t = setTimeout(() => {
-        const texto = campo.value !== undefined ? campo.value : campo.textContent;
-        if (texto && texto.trim()) sugerir(texto, { voz: false });
-      }, 700);
-    });
-  }
-
-  window.ComuniAvatar = { hablar, detener, sugerir, vincularMensaje };
+  window.ComuniAvatar = { hablar, detener, sugerir };
 })();

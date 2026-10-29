@@ -7,7 +7,6 @@
   <meta name="description" content="COMUNI-AI: herramienta de comunicación aumentativa y alternativa.">
   <title>COMUNI-AI | Tus palabras, a tu ritmo</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <!-- Ruta corregida para GitHub Pages -->
   <link rel="stylesheet" href="assets/css/styles.css">
 </head>
 <body>
@@ -30,6 +29,10 @@
       <button class="nav-item active" data-view="communicate" type="button"><span class="nav-icon">▦</span> Comunicar</button>
       <button class="nav-item" data-view="phrases" type="button"><span class="nav-icon">☷</span> Mis frases</button>
       <button class="nav-item" data-view="history" type="button"><span class="nav-icon">↶</span> Historial</button>
+      
+      <!-- NUEVA PESTAÑA -->
+      <button class="nav-item" data-view="avatar" type="button"><span class="nav-icon">👄</span> Avatar y Voz</button>
+
       <div class="sidebar-bottom">
         <div class="support-card">
           <span class="support-icon" aria-hidden="true">✦</span>
@@ -42,6 +45,8 @@
     </aside>
 
     <main id="main" class="main-content">
+      
+      <!-- VISTA 1: COMUNICAR -->
       <section class="view active" id="view-communicate" aria-labelledby="pageTitle">
         <div class="welcome-row">
           <div>
@@ -96,83 +101,9 @@
           <div class="pictogram-grid" id="pictogramGrid" aria-label="Pictogramas disponibles"></div>
           <p class="board-note">Este tablero es una muestra para el prototipo. Los pictogramas pueden personalizarse según las necesidades de cada persona.</p>
         </section>
-
-        <!-- ======================================================= -->
-        <!-- AQUÍ EMPIEZA EL CÓDIGO DEL ASISTENTE IA (Avatar Lip-Sync) -->
-        <!-- ======================================================= -->
-        <aside class="ia-panel" id="asistente-ia" aria-labelledby="ia-titulo">
-          <header class="ia-panel__cabecera">
-            <h2 id="ia-titulo">Asistente IA</h2>
-            <button type="button" class="ia-btn ia-btn--suave" id="ia-silenciar" aria-pressed="false">
-              <span aria-hidden="true">🔊</span> Voz activada
-            </button>
-          </header>
-
-          <div class="ia-escena">
-            <!-- Burbuja: texto exacto que se está pronunciando -->
-            <div class="ia-burbuja">
-              <p class="ia-burbuja__texto" id="ia-texto-vivo" aria-live="off">
-                Hola, soy Comuni. Escribe "Quiero ir..." y te ayudo a completar la frase.
-              </p>
-            </div>
-
-            <!-- Avatar SVG -->
-            <svg class="ia-avatar" id="ia-avatar" viewBox="0 0 200 200" role="img"
-                 aria-label="Avatar del asistente Comuni, una cara sonriente">
-              <circle cx="100" cy="100" r="96" fill="#DCEFEA"/>
-              <!-- cabello y orejas -->
-              <circle cx="31" cy="108" r="11" fill="#E8B88C"/>
-              <circle cx="169" cy="108" r="11" fill="#E8B88C"/>
-              <circle cx="100" cy="106" r="68" fill="#F2C9A0"/>
-              <path d="M31 98 C28 38 172 38 169 98 C150 68 118 66 100 70 C82 66 50 68 31 98Z" fill="#1D4E89"/>
-              <!-- mejillas -->
-              <circle cx="62" cy="128" r="10" fill="#F4A38C" opacity=".45"/>
-              <circle cx="138" cy="128" r="10" fill="#F4A38C" opacity=".45"/>
-              <!-- cejas -->
-              <path d="M58 86 Q72 78 86 86" fill="none" stroke="#1F2937" stroke-width="4" stroke-linecap="round"/>
-              <path d="M114 86 Q128 78 142 86" fill="none" stroke="#1F2937" stroke-width="4" stroke-linecap="round"/>
-              <!-- ojos -->
-              <g class="ia-ojos">
-                <circle cx="72" cy="104" r="9" fill="#1F2937"/>
-                <circle cx="128" cy="104" r="9" fill="#1F2937"/>
-                <circle cx="75" cy="101" r="3" fill="#fff"/>
-                <circle cx="131" cy="101" r="3" fill="#fff"/>
-              </g>
-              <!-- nariz -->
-              <path d="M96 118 Q100 124 104 118" fill="none" stroke="#C98F66" stroke-width="3" stroke-linecap="round"/>
-              <!-- boca (labios) -->
-              <g class="ia-boca">
-                <ellipse class="ia-boca__interior" cx="100" cy="144" rx="19" ry="11" fill="#5B1A1A"/>
-                <ellipse class="ia-boca__lengua" cx="100" cy="150" rx="9" ry="4" fill="#D9776B"/>
-                <path class="ia-labio ia-labio--sup" d="M80 144 Q90 136 100 139 Q110 136 120 144 Q100 148 80 144Z" fill="#B45346"/>
-                <path class="ia-labio ia-labio--inf" d="M82 145 Q100 160 118 145 Q100 152 82 145Z" fill="#B45346"/>
-              </g>
-            </svg>
-          </div>
-
-          <!-- Chat -->
-          <ul class="ia-log" id="ia-log" role="log" aria-live="polite" aria-label="Conversación con el asistente"></ul>
-
-          <div class="ia-sugerencias" id="ia-sugerencias" aria-label="Sugerencias de frases"></div>
-
-          <form class="ia-form" id="ia-form" autocomplete="off">
-            <label for="ia-entrada" class="ia-sr">Escribe para el asistente</label>
-            <input type="text" id="ia-entrada" class="ia-entrada" placeholder='Prueba: "Quiero ir"' inputmode="text">
-            <button type="submit" class="ia-btn ia-btn--primario">Enviar</button>
-          </form>
-
-          <div class="ia-acciones">
-            <button type="button" class="ia-btn ia-btn--suave" id="ia-repetir">🔁 Escuchar de nuevo</button>
-            <button type="button" class="ia-btn ia-btn--alerta" id="ia-detener">⏹ Detener</button>
-          </div>
-        </aside>
-        <!-- ======================================================= -->
-        <!-- FIN DEL ASISTENTE IA -->
-        <!-- ======================================================= -->
-
       </section>
 
-      <!-- VISTA: MIS FRASES -->
+      <!-- VISTA 2: MIS FRASES -->
       <section class="view" id="view-phrases" aria-labelledby="phrasesTitle">
         <div class="page-header"><p class="eyebrow">PERSONALIZACIÓN</p><h1 id="phrasesTitle">Mis frases</h1><p class="lead">Guarda expresiones que usas con frecuencia para encontrarlas más rápido.</p></div>
         <div class="simple-card">
@@ -181,13 +112,77 @@
         </div>
       </section>
 
-      <!-- VISTA: HISTORIAL -->
+      <!-- VISTA 3: HISTORIAL -->
       <section class="view" id="view-history" aria-labelledby="historyTitle">
         <div class="page-header"><p class="eyebrow">EN ESTE DISPOSITIVO</p><h1 id="historyTitle">Historial reciente</h1><p class="lead">Consulta las acciones registradas en esta sesión de prueba.</p></div>
         <div class="simple-card"><div class="card-heading"><h2>Actividad</h2><button class="text-button danger-text" id="clearHistoryButton" type="button">Borrar historial</button></div><div id="historyList" class="history-list"></div><p class="privacy-note">El prototipo registra acciones de prueba localmente. Evita introducir información personal o sensible.</p></div>
       </section>
 
-      <!-- VISTA: ADMINISTRACIÓN -->
+      <!-- VISTA 4: NUEVA PESTAÑA DEL AVATAR -->
+      <section class="view" id="view-avatar" aria-labelledby="avatarTitle">
+        <div class="page-header">
+          <p class="eyebrow">ASISTENTE VISUAL Y TRADUCCIÓN</p>
+          <h1 id="avatarTitle">Avatar y Voz</h1>
+          <p class="lead">Escribe, traduce y observa cómo el personaje pronuncia el mensaje.</p>
+        </div>
+        
+        <div class="avatar-layout">
+          <!-- EL PERSONAJE Y LABIOS DE LUIS -->
+          <div class="avatar-visual">
+            <div class="stage">
+              <svg id="lips" viewBox="0 0 400 300" role="img" aria-label="Boca que pronuncia el mensaje">
+                <defs>
+                  <linearGradient id="gU" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6e0f12"/><stop offset=".55" stop-color="#b3201f"/><stop offset="1" stop-color="#8d1417"/></linearGradient>
+                  <linearGradient id="gL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7d1114"/><stop offset=".5" stop-color="#d03a30"/><stop offset="1" stop-color="#a11a1b"/></linearGradient>
+                  <radialGradient id="skin" cx=".5" cy=".45" r=".75"><stop offset="0" stop-color="#F9D5B8"/><stop offset="1" stop-color="#EDB48F"/></radialGradient>
+                  <clipPath id="clip"><path id="clipP"/></clipPath>
+                  <pattern id="pt" width="5" height="8" patternUnits="userSpaceOnUse"><path d="M2.5 0V8" stroke="#3b0508" stroke-width=".7" opacity=".5"/></pattern>
+                  <linearGradient id="gT" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#d6d6dc"/></linearGradient>
+                  <clipPath id="clipL"><use href="#lo"/><use href="#up"/></clipPath>
+                  <filter id="bl"><feGaussianBlur stdDeviation="6"/></filter>
+                </defs>
+                <rect width="400" height="300" fill="url(#skin)"/>
+                <ellipse cx="172" cy="14" rx="20" ry="9" fill="#d98f6c" opacity=".55"/><ellipse cx="228" cy="14" rx="20" ry="9" fill="#d98f6c" opacity=".55"/>
+                <path d="M186 30C190 48 190 56 186 64M214 30C210 48 210 56 214 64" stroke="#d98f6c" stroke-width="5" fill="none" stroke-linecap="round" opacity=".6"/>
+                <ellipse cx="200" cy="292" rx="70" ry="10" fill="#d98f6c" opacity=".5"/>
+                <g filter="url(#bl)" opacity=".45"><ellipse cx="200" cy="262" rx="70" ry="14" fill="#b86b4a"/><path d="M86 70C70 130 90 210 120 250M314 70C330 130 310 210 280 250" stroke="#c98563" stroke-width="14" fill="none"/></g>
+                <path id="cav" fill="#1c0405"/>
+                <g clip-path="url(#clip)">
+                  <rect id="tU" fill="url(#gT)" rx="12"/><rect id="tL" fill="#dcdce0" rx="10"/><ellipse id="tg" fill="#c4474f"/>
+                </g>
+                <path id="lo" fill="url(#gL)" stroke="#2b0507" stroke-width="3" stroke-linejoin="round"/>
+                <path id="up" fill="url(#gU)" stroke="#2b0507" stroke-width="3" stroke-linejoin="round"/>
+                <rect width="400" height="300" fill="url(#pt)" clip-path="url(#clipL)"/>
+                <g fill="#fff" opacity=".7">
+                  <ellipse id="g1" rx="26" ry="6"/><ellipse id="g2" rx="9" ry="4"/><ellipse id="g3" rx="16" ry="4"/><ellipse id="g4" rx="22" ry="4"/><ellipse id="g5" rx="10" ry="3"/>
+                </g>
+              </svg>
+              <div id="vis" class="vis" aria-hidden="true"></div>
+            </div>
+            <p id="caption" class="caption" aria-live="polite">Toca Hablar y lee mis labios 👀</p>
+            <button class="chip-btn" id="slow" aria-pressed="false">🐢 Modo lento para leer labios</button>
+          </div>
+
+          <!-- TRADUCTOR -->
+          <div class="simple-card">
+            <h2>🌐 Traductor</h2>
+            <div class="row langs" style="margin-top: 15px;">
+              <select id="from" aria-label="Idioma de origen"></select>
+              <button class="button button-secondary" id="swap" aria-label="Intercambiar idiomas">⇄</button>
+              <select id="to" aria-label="Idioma de destino"></select>
+            </div>
+            <label for="tIn" style="margin-top: 15px; display: block;">Texto original</label>
+            <textarea id="tIn" placeholder="Escribe lo que quieres traducir…" style="min-height: 100px; width: 100%; padding: 12px; border-radius: 10px; border: 2px solid var(--line);"></textarea>
+            <button class="button button-secondary" id="tFromBoard" style="margin: 10px 0;">📋 Usar mi mensaje</button>
+            <button class="button button-primary" id="tGo" style="width: 100%;">🌐 Traducir</button>
+            <label style="margin-top: 15px; display: block;">Resultado</label>
+            <div id="tOut" class="result" aria-live="polite" style="min-height: 80px; padding: 15px; background: var(--soft-teal); border-radius: 10px; font-weight: bold; font-size: 1.2rem;">La traducción aparecerá aquí.</div>
+            <button class="button button-primary" id="tSpeak" style="width: 100%; margin-top: 15px; background: var(--teal);">👄 Escuchar y ver labios</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- VISTA 5: ADMINISTRACIÓN -->
       <section class="view" id="view-admin" aria-labelledby="adminTitle">
         <div class="page-header"><p class="eyebrow">SOLO PARA EL EQUIPO</p><h1 id="adminTitle">Área de investigación</h1><p class="lead">Panel demostrativo para revisar métricas básicas del prototipo.</p></div>
         <div class="admin-notice"><strong>Modo de demostración</strong><span>No hay conexión con un servidor. Los datos se mantienen en este navegador.</span></div>
@@ -201,11 +196,10 @@
   
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   
-  <!-- SCRIPTS -->
   <script src="assets/js/db.js"></script>
   <script src="assets/js/translator.js"></script>
   <script src="assets/js/predictor.js"></script>
-  <script src="assets/js/ia_avatar.js" defer></script>
+  <!-- ELIMINADO ia_avatar.js porque ahora está dentro de app.js -->
   <script src="assets/js/app.js" defer></script>
   <script>
     if ('serviceWorker' in navigator && location.protocol !== 'file:') {

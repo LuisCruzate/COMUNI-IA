@@ -9,10 +9,8 @@
     {word:"Jugar",emoji:"⚽",category:"actividades"},{word:"Música",emoji:"🎵",category:"actividades"},{word:"Leer",emoji:"📖",category:"actividades"},{word:"Salir",emoji:"🌳",category:"actividades"},{word:"Casa",emoji:"🏠",category:"actividades"},{word:"Sí",emoji:"👍",category:"actividades"},{word:"No",emoji:"👎",category:"actividades"}
   ];
   
-  // Estado global en memoria (sincronizado con la BD)
   const state = {tokens:[],history:[],phrases:[],category:"todo",selections:0,accepted:0,spoken:0};
 
-  // Inicialización asíncrona
   async function init() {
     const savedHistory = await DB.getAll('history');
     const savedPhrases = await DB.getAll('phrases');
@@ -37,7 +35,7 @@
 
   const record = async (action, detail) => {
     const newItem = { action, detail, time: new Date().toISOString() };
-    await DB.add('history', newItem); // Guardar en IndexedDB
+    await DB.add('history', newItem);
     state.history.unshift(newItem);
     renderHistory(); 
     renderMetrics();
@@ -69,7 +67,6 @@
     });
     $("#undoButton").disabled=state.tokens.length===0;
 
-    // Traducción en tiempo real (Simulada en el estado de voz)
     const currentSentence = Translator.buildSentence(state.tokens);
     if(currentSentence) {
         $("#speechStatus").textContent = `Mensaje actual: "${currentSentence}"`;
@@ -84,7 +81,6 @@
     renderTokens();
     await record("Palabra añadida",clean);
     
-    // Autocompletado / Predicción
     const nextWord = Predictor.predictNextWord(state.tokens, state.history);
     if(nextWord) {
         toast(`Sugerencia: ¿Quieres decir "${nextWord}"?`);
@@ -161,7 +157,7 @@
     event.preventDefault();const input=$("#newPhrase");const phrase=input.value.trim();if(!phrase)return;
     if(!state.phrases.includes(phrase)){
         state.phrases.unshift(phrase);
-        await DB.add('phrases', {text: phrase}); // Guardar en BD
+        await DB.add('phrases', {text: phrase});
     }
     input.value="";renderPhrases();toast("Frase guardada en este dispositivo.");
   });
@@ -169,7 +165,7 @@
   $("#clearHistoryButton").addEventListener("click",async ()=>{
     if(!state.history.length){toast("El historial ya está vacío.");return;}
     state.history=[];
-    await DB.clear('history'); // Borrar de BD
+    await DB.clear('history');
     renderHistory();toast("Historial borrado.");
   });
 
@@ -185,12 +181,169 @@
   window.addEventListener("online",()=>{$("#connectionText").textContent="Conexión disponible";});
   window.addEventListener("offline",()=>{$("#connectionText").textContent="Modo sin conexión";});
 
-  
-   document.addEventListener('comuni:frase-aceptada', (evento) => {
+  // CONEXIÓN CON EL ASISTENTE IA (Avatar)
+  document.addEventListener('comuni:frase-aceptada', (evento) => {
     const fraseAceptada = evento.detail.frase;
-    // Llama a tu función existente para agregar la frase al mensaje
     addPhrase(fraseAceptada); 
   });
-  // Arrancar la app
+
+  // =========================================================
+  // LÓGICA EXACTA DE LUIS CÁRDENAS (AVATAR Y TRADUCTOR)
+  // =========================================================
+  const $id = id => document.getElementById(id);
+  const setA = (id, o) => { const e = $id(id); if(e) for (const k in o) e.setAttribute(k, o[k]); };
+  
+  function drawMouth(o, r, t = 0) {
+    if(!$id('cav')) return;
+    const cx = 200, cy = 140, W = 150 - Math.max(r, 0) * 55 + Math.max(-r, 0) * 8, g = o * 60,
+      xl = cx - W, xr = cx + W, iu = cy - g * .45, il = cy + g * .6, top = cy - 70 - g * .3, bot = cy + 82 + g * .85;
+    const R = y => `C${xr - W * .2} ${y} ${cx + W * .55} ${y} ${cx} ${y}C${cx - W * .55} ${y} ${xl + W * .2} ${y} ${xl} ${cy}`;
+    const L = y => `C${xl + W * .2} ${y} ${cx - W * .55} ${y} ${cx} ${y}C${cx + W * .55} ${y} ${xr - W * .2} ${y} ${xr} ${cy}`;
+    const cav = `M${xl} ${cy}${L(iu)}${R(il)}Z`;
+    setA('cav', { d: cav }); setA('clipP', { d: cav });
+    setA('up', { d: `M${xl} ${cy}C${xl + W * .1} ${cy - 55 - g * .2} ${cx - W * .5} ${top + 4} ${cx - W * .14} ${top}Q${cx} ${top + 16} ${cx + W * .14} ${top}C${cx + W * .5} ${top + 4} ${xr - W * .1} ${cy - 55 - g * .2} ${xr} ${cy}${R(iu)}Z` });
+    setA('lo', { d: `M${xl} ${cy}C${xl + W * .1} ${cy + 50 + g * .5} ${cx - W * .5} ${bot} ${cx} ${bot}C${cx + W * .5} ${bot} ${xr - W * .1} ${cy + 50 + g * .5} ${xr} ${cy}${R(il)}Z` });
+    const gap = il - iu;
+    setA('tU', { x: cx - W * .6, y: iu - 4, width: W * 1.2, height: gap * .5 + 10 });
+    setA('tL', { x: cx - W * .5, y: il - gap * .28 - 8, width: W, height: 16 });
+    setA('tg', { cx, cy: il - 3 - t * gap * .45, rx: W * .35, ry: Math.max(0, gap * .28) });
+    setA('g1', { cx: cx - W * .36, cy: top + 24, transform: `rotate(-12 ${cx - W * .36} ${top + 24})` });
+    setA('g2', { cx: cx + W * .32, cy: top + 30 });
+    setA('g3', { cx: cx - W * .3, cy: bot - 24 }); setA('g4', { cx: cx + W * .05, cy: bot - 19 }); setA('g5', { cx: cx + W * .42, cy: bot - 32 });
+  }
+
+  const Mouth = { o: 0, r: 0, t: 0, to: 0, tr: 0, tt: 0 };
+  const VOW = { a: [1, 0, 0], e: [.5, -.6, 0], i: [.22, -1, 0], o: [.7, .85, 0], u: [.32, 1, 0], y: [.22, -1, 0] };
+  const normChar = c => (c || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  
+  function viseme(ch) {
+    const c = normChar(ch);
+    if (!c) return [.04, 0, 0];
+    if (VOW[c]) return VOW[c];
+    if ('mbp'.includes(c)) return [0, 0, 0];
+    if ('fv'.includes(c)) return [.14, -.2, 0];
+    if ('szc'.includes(c)) return [.12, -.8, 0];
+    if ('ltdn'.includes(c)) return [.32, -.2, 1];
+    if ('wq'.includes(c)) return [.3, .85, 0];
+    if (/[\s.,;:!?¿¡]/.test(c)) return [.04, 0, 0];
+    return [.28, -.1, 0];
+  }
+
+  function shape(text, i) {
+    const n = normChar(text[i]), v = viseme(text[i]), nx = normChar(text[i + 1]);
+    if (/[a-z]/.test(n) && !VOW[n] && !'mbpfv'.includes(n) && VOW[nx]) { const w = VOW[nx]; return [Math.max(v[0], w[0] * .6), w[1] * .6, v[2]]; }
+    return v;
+  }
+
+  let lastVis = '';
+  function setVis(ch) { 
+    if (/\p{L}/u.test(ch || '')) { 
+      const v = ch.toUpperCase(); 
+      if (v !== lastVis) { lastVis = v; if($id('vis')) $id('vis').textContent = v; } 
+    } 
+  }
+
+  const sp = { on: false, paused: false, text: '', base: 0, t0: 0, rate: .9, idx: 0, vis: [] };
+  let running = false;
+
+  function loop(t) {
+    if (sp.on && !sp.paused) {
+      sp.idx = sp.base + (t - sp.t0) / 1000 * 11 * sp.rate;
+      if (sp.idx >= sp.text.length) { sp.idx = sp.text.length - 1; finish(); }
+      if (sp.on) { const k = Math.floor(sp.idx); [Mouth.to, Mouth.tr, Mouth.tt] = sp.vis[k] || [.04, 0, 0]; setVis(sp.text[k]); }
+    } else { Mouth.to = 0; Mouth.tr = 0; Mouth.tt = 0; }
+    Mouth.o += (Mouth.to - Mouth.o) * .3; Mouth.r += (Mouth.tr - Mouth.r) * .3; Mouth.t += (Mouth.tt - Mouth.t) * .3;
+    drawMouth(Mouth.o, Mouth.r, Mouth.t);
+    if (sp.on || Mouth.o > .01 || Math.abs(Mouth.r) > .01) requestAnimationFrame(loop);
+    else { running = false; drawMouth(0, 0); }
+  }
+  const kick = () => { if (!running) { running = true; requestAnimationFrame(loop); } };
+  function finish() { lastVis = ''; if($id('vis')) $id('vis').textContent = ''; sp.on = false; sp.paused = false; kick(); }
+  
+  function stopAvatar() { 
+    if ('speechSynthesis' in window) speechSynthesis.cancel(); 
+    finish(); 
+  }
+
+  function buildVis(t) {
+    const out = [];
+    for (let i = 0; i < t.length; i++) out[i] = shape(t, i);
+    return out;
+  }
+
+  function speakAvatar(text) {
+    text = (text || '').trim(); if (!text) return;
+    stopAvatar();
+    if($id('caption')) $id('caption').textContent = text;
+    const rate = 0.9;
+    Object.assign(sp, { on: true, paused: false, text, base: 0, t0: performance.now(), rate, idx: 0, vis: buildVis(text) });
+    
+    if ('speechSynthesis' in window) {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "es-CO";
+      u.rate = rate;
+      u.onend = u.onerror = () => finish();
+      speechSynthesis.speak(u);
+    }
+    kick();
+  }
+
+  // Lógica del Traductor
+  const LANGS_AV = { es: 'Español', en: 'Inglés', fr: 'Francés', pt: 'Portugués' };
+  ['from', 'to'].forEach((id, n) => { 
+    const sel = $id(id); if(!sel) return;
+    sel.innerHTML = '';
+    Object.entries(LANGS_AV).forEach(([k, name]) => sel.add(new Option(name, k, false, k === (n ? 'en' : 'es')))); 
+  });
+
+  const translateAvatar = async (text, from, to) => {
+    if (from === to) return text;
+    try {
+      const r = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${from}&tl=${to}&dt=t&q=${encodeURIComponent(text)}`);
+      const j = await r.json();
+      return j[0].map(x => x[0]).join('').trim();
+    } catch { return "Error de conexión."; }
+  };
+
+  let lastTr = '';
+  if($id('tGo')) {
+    $id('tGo').onclick = async () => {
+      const t = $id('tIn').value.trim(); if (!t) return; 
+      $id('tOut').textContent = 'Traduciendo…';
+      const r = await translateAvatar(t, $id('from').value, $id('to').value);
+      lastTr = r || ''; $id('tOut').textContent = r || 'Error.';
+    };
+  }
+
+  if($id('swap')) {
+    $id('swap').onclick = () => { 
+      const f = $id('from'), t = $id('to'); 
+      [f.value, t.value] = [t.value, f.value]; 
+    };
+  }
+
+  if($id('tFromBoard')) {
+    $id('tFromBoard').onclick = () => { 
+      // CORREGIDO: S.msg ahora se obtiene del estado real
+      const msg = state.tokens.map(t => t.word).join(" ");
+      $id('tIn').value = msg; 
+    };
+  }
+
+  if($id('tSpeak')) {
+    $id('tSpeak').onclick = () => { if (lastTr) speakAvatar(lastTr); };
+  }
+
+  if($id('slow')) {
+    $id('slow').onclick = (e) => {
+      const active = e.currentTarget.getAttribute('aria-pressed') === 'true';
+      e.currentTarget.setAttribute('aria-pressed', !active);
+      e.currentTarget.textContent = !active ? '🐢 Modo lento: Activado' : '🐢 Modo lento para leer labios';
+    };
+  }
+
+  drawMouth(0, 0);
+  // =========================================================
+
   init();
 })();
