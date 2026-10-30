@@ -11,6 +11,7 @@ Prototipo académico de interfaz para comunicación aumentativa y alternativa (C
 - Tablero de pictogramas con categorías y búsqueda.
 - Construcción de mensajes mediante pictogramas o texto.
 - Síntesis de voz del navegador cuando está disponible.
+- Conversación bilingüe con reconocimiento de voz, traducción en línea y lectura de la respuesta en el idioma seleccionado, con animación labial del avatar. Este módulo envía el texto a Google Translate y requiere internet; el resto de la app conserva su funcionamiento offline.
 - Sugerencias de frases de ejemplo.
 - Deshacer la última palabra.
 - Frases guardadas durante la sesión.

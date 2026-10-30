@@ -153,6 +153,12 @@
   $$(".nav-item[data-view]").forEach(button=>button.addEventListener("click",()=>{
     $$(".nav-item[data-view]").forEach(b=>b.classList.toggle("active",b===button));
     $$(".view").forEach(v=>v.classList.toggle("active",v.id===`view-${button.dataset.view}`));
+    const avatar = $("#main-avatar-visual");
+    if (avatar && button.dataset.view === "translation") {
+      $("#translation-avatar-slot").append(avatar);
+    } else if (avatar && button.dataset.view === "avatar") {
+      $("#avatar-slot").append(avatar);
+    }
     if(button.dataset.view==="phrases")renderPhrases();if(button.dataset.view==="history")renderHistory();if(button.dataset.view==="admin")renderMetrics();
     const heading=$(`#view-${button.dataset.view} h1`);if(heading)heading.setAttribute("tabindex","-1"),heading.focus({preventScroll:true});
   }));
@@ -284,7 +290,7 @@
   }
 
   // --- FUNCIÓN PARA HABLAR EN EL AVATAR (CON SELECTOR DE VOZ) ---
-  function speakAvatar(text) {
+  function speakAvatar(text, language) {
     text = (text || '').trim(); if (!text) return;
     stopAvatar();
     if($id('caption')) $id('caption').textContent = text;
@@ -299,7 +305,14 @@
       u.rate = rate;
       
       const voiceSelect = $id('voice-select');
-      if (voiceSelect && voiceSelect.value !== "") {
+      if (language) {
+        const languagePrefix = language.split("-")[0].toLowerCase();
+        const matchingVoice = speechSynthesis.getVoices().find(voice =>
+          voice.lang.toLowerCase().startsWith(languagePrefix)
+        );
+        if (matchingVoice) u.voice = matchingVoice;
+        u.lang = matchingVoice ? matchingVoice.lang : language;
+      } else if (voiceSelect && voiceSelect.value !== "") {
         const selectedVoice = speechSynthesis.getVoices()[voiceSelect.value];
         if (selectedVoice) {
           u.voice = selectedVoice;
@@ -314,6 +327,7 @@
     }
     kick();
   }
+  window.speakAvatar = speakAvatar;
 
   // Lógica del Traductor
   const LANGS_AV = { es: 'Español', en: 'Inglés', fr: 'Francés', pt: 'Portugués' };
@@ -421,6 +435,54 @@
       if (vs2) vs2.addEventListener('change', (e) => syncVoices(e.target));
     }, 500);
   }
+
+  // Integración aislada del módulo de conversación bilingüe.
+  const conversationMicButton = $("#conversationMicButton");
+  const conversationSpeakButton = $("#conversationSpeakButton");
+  const conversationLanguage = $("#conversationLanguage");
+  const conversationStatus = $("#conversationStatus");
+  const conversationResponse = $("#conversationResponse");
+
+  conversationMicButton.addEventListener("click", async () => {
+    if (window.ComuniTranslation.isListening()) {
+      await window.ComuniTranslation.stopListening({ translate: true });
+      return;
+    }
+
+    await window.ComuniTranslation.startListening();
+  });
+
+  conversationSpeakButton.addEventListener("click", async () => {
+    const message = Translator.buildSentence(state.tokens);
+    if (!message) {
+      conversationResponse.textContent = "Primero construye tu respuesta en la sección Comunicar.";
+      return;
+    }
+
+    conversationSpeakButton.disabled = true;
+    conversationResponse.textContent = "Traduciendo tu respuesta…";
+    try {
+      const translated = await window.ComuniTranslation.traducirTexto(
+        message,
+        "es",
+        conversationLanguage.value
+      );
+      conversationResponse.textContent = `Respuesta traducida: ${translated}`;
+      try {
+        window.ComuniTranslation.hablarTexto(translated, conversationLanguage.selectedOptions[0].dataset.locale);
+        conversationStatus.textContent = "Tu respuesta traducida se está leyendo en voz alta.";
+      } catch (error) {
+        console.error("La traducción se completó, pero no se pudo reproducir la voz.", error);
+        conversationStatus.textContent = "La traducción está lista, pero el navegador no pudo leerla en voz alta.";
+      }
+    } catch (error) {
+      console.error("No se pudo traducir la respuesta.", error);
+      conversationResponse.textContent = "No se pudo traducir la respuesta. Revisa tu conexión e inténtalo de nuevo.";
+      conversationStatus.textContent = "Error de traducción.";
+    } finally {
+      conversationSpeakButton.disabled = false;
+    }
+  });
 
   drawMouth(0, 0);
   

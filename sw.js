@@ -1,4 +1,4 @@
-const CACHE_NAME = "comuni-ai-v4";
+const CACHE_NAME = "comuni-ai-v6";
 const APP_FILES = [
   "./", 
   "./index.html", 
@@ -6,6 +6,7 @@ const APP_FILES = [
   "./assets/js/app.js", 
   "./assets/js/db.js",
   "./assets/js/translator.js",
+  "./assets/js/translation.js",
   "./assets/js/predictor.js",
   "./manifest.webmanifest"
 ];

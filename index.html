@@ -32,6 +32,7 @@
       
       <!-- PESTAÑA DEL AVATAR -->
       <button class="nav-item" data-view="avatar" type="button"><span class="nav-icon">👄</span> Avatar y Voz</button>
+      <button class="nav-item" data-view="translation" type="button"><span class="nav-icon" aria-hidden="true">🌐</span> Conversación bilingüe</button>
 
       <div class="sidebar-bottom">
         <div class="support-card">
@@ -138,7 +139,8 @@
         
         <div class="avatar-layout">
           <!-- EL PERSONAJE Y LABIOS DE LUIS -->
-          <div class="avatar-visual">
+          <div id="avatar-slot">
+          <div class="avatar-visual" id="main-avatar-visual">
             <div class="stage">
               <svg id="lips" viewBox="0 0 400 300" role="img" aria-label="Boca que pronuncia el mensaje">
                 <defs>
@@ -178,6 +180,7 @@
               <select id="voice-select" style="width: 100%; padding: 10px; border-radius: 10px; border: 2px solid var(--line); margin-top: 5px; font-family: inherit;"></select>
             </div>
           </div>
+          </div>
 
           <!-- TRADUCTOR -->
           <div class="simple-card">
@@ -198,6 +201,39 @@
         </div>
       </section>
 
+      <!-- VISTA NUEVA: CONVERSACIÓN BILINGÜE -->
+      <section class="view" id="view-translation" aria-labelledby="conversationTitle">
+        <div class="page-header">
+          <p class="eyebrow">COMUNICACIÓN BIDIRECCIONAL</p>
+          <h1 id="conversationTitle">Conversación bilingüe</h1>
+          <p class="lead">Escucha a la otra persona y prepara tu respuesta con el tablero o el teclado de comunicación.</p>
+        </div>
+        <div class="avatar-layout conversation-layout">
+          <div id="translation-avatar-slot"></div>
+          <section class="conversation-card" id="modulo-conversacion" aria-labelledby="conversationTitle">
+          <div class="conversation-language">
+            <label for="conversationLanguage">Idioma de la otra persona</label>
+            <select id="conversationLanguage">
+              <option value="en" data-locale="en-US">Inglés</option>
+              <option value="fr" data-locale="fr-FR">Francés</option>
+              <option value="pt" data-locale="pt-PT">Portugués</option>
+            </select>
+          </div>
+          <p class="conversation-privacy" role="note">Este módulo necesita conexión a internet para traducir. El texto reconocido se envía a Google Translate; el reconocimiento de voz puede ser procesado por el navegador.</p>
+          <button class="button button-primary conversation-mic" id="conversationMicButton" type="button" aria-pressed="false">
+            <span aria-hidden="true">🎤</span> Escuchar a la otra persona
+          </button>
+          <div class="conversation-result" id="conversationResult" aria-live="polite" aria-atomic="true">La voz y su traducción al español aparecerán aquí.</div>
+          <p class="helper-text" id="conversationStatus" role="status">Pulsa el micrófono para empezar. Se traducirá después de 2 segundos de silencio.</p>
+          <button class="button button-primary conversation-speak" id="conversationSpeakButton" type="button">
+            <span aria-hidden="true">🌐</span> Traducir y Hablar
+          </button>
+          <p class="helper-text">La respuesta se toma del mensaje que estás construyendo en la sección Comunicar.</p>
+          <div class="conversation-response" id="conversationResponse" aria-live="polite" aria-atomic="true"></div>
+          </section>
+        </div>
+      </section>
+
       <!-- VISTA 5: ADMINISTRACIÓN -->
       <section class="view" id="view-admin" aria-labelledby="adminTitle">
         <div class="page-header"><p class="eyebrow">SOLO PARA EL EQUIPO</p><h1 id="adminTitle">Área de investigación</h1><p class="lead">Panel demostrativo para revisar métricas básicas del prototipo.</p></div>
@@ -215,6 +251,7 @@
   <script src="assets/js/db.js"></script>
   <script src="assets/js/translator.js"></script>
   <script src="assets/js/predictor.js"></script>
+  <script src="assets/js/translation.js" defer></script>
   <script src="assets/js/app.js" defer></script>
   <script>
     if ('serviceWorker' in navigator && location.protocol !== 'file:') {
