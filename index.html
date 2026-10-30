@@ -30,7 +30,7 @@
       <button class="nav-item" data-view="phrases" type="button"><span class="nav-icon">☷</span> Mis frases</button>
       <button class="nav-item" data-view="history" type="button"><span class="nav-icon">↶</span> Historial</button>
       
-      <!-- NUEVA PESTAÑA -->
+      <!-- PESTAÑA DEL AVATAR -->
       <button class="nav-item" data-view="avatar" type="button"><span class="nav-icon">👄</span> Avatar y Voz</button>
 
       <div class="sidebar-bottom">
@@ -62,16 +62,26 @@
             <div><span class="step-label">TU MENSAJE</span><h2 id="messageHeading">Vamos construyéndolo</h2></div>
             <button class="text-button" id="undoButton" type="button" disabled>↶ Deshacer</button>
           </div>
+          
           <div class="message-composition" id="messageTokens" aria-live="polite" aria-label="Mensaje en construcción">
             <span class="empty-message">Tus palabras aparecerán aquí…</span>
           </div>
+          
           <div class="message-controls">
             <label class="sr-only" for="typedWord">Escribe una palabra o frase</label>
             <input id="typedWord" type="text" maxlength="100" placeholder="También puedes escribir aquí…" autocomplete="off">
             <button class="button button-secondary" id="addWordButton" type="button">Añadir palabra</button>
             <button class="button button-primary" id="speakButton" type="button"><span aria-hidden="true">🔊</span> Hablar</button>
           </div>
-          <p class="helper-text" id="speechStatus" role="status">Puedes escuchar el mensaje antes de compartirlo.</p>
+          
+          <!-- SELECTOR DE VOZ PARA EL COMUNICADOR PRINCIPAL -->
+          <div style="display: flex; align-items: center; gap: 10px; background: #f8fafc; padding: 10px; border-radius: 10px; border: 1px solid var(--line); margin-top: 15px;">
+            <label for="main-voice-select" style="font-size: 13px; font-weight: 700; white-space: nowrap; color: var(--ink); margin: 0;">🗣️ Voz:</label>
+            <select id="main-voice-select" style="padding: 8px; border-radius: 8px; border: 1px solid var(--line); font-size: 13px; width: 100%;"></select>
+          </div>
+          <!-- FIN DEL SELECTOR -->
+
+          <p class="helper-text" id="speechStatus" role="status" style="margin-top: 15px;">Puedes escuchar el mensaje antes de compartirlo.</p>
         </section>
 
         <section class="suggestions-section" aria-labelledby="suggestionTitle">
@@ -118,7 +128,7 @@
         <div class="simple-card"><div class="card-heading"><h2>Actividad</h2><button class="text-button danger-text" id="clearHistoryButton" type="button">Borrar historial</button></div><div id="historyList" class="history-list"></div><p class="privacy-note">El prototipo registra acciones de prueba localmente. Evita introducir información personal o sensible.</p></div>
       </section>
 
-      <!-- VISTA 4: NUEVA PESTAÑA DEL AVATAR -->
+      <!-- VISTA 4: AVATAR Y TRADUCTOR -->
       <section class="view" id="view-avatar" aria-labelledby="avatarTitle">
         <div class="page-header">
           <p class="eyebrow">ASISTENTE VISUAL Y TRADUCCIÓN</p>
@@ -160,7 +170,13 @@
               <div id="vis" class="vis" aria-hidden="true"></div>
             </div>
             <p id="caption" class="caption" aria-live="polite">Toca Hablar y lee mis labios 👀</p>
-            <button class="chip-btn" id="slow" aria-pressed="false">🐢 Modo lento para leer labios</button>
+            <button class="chip-btn" id="slow" aria-pressed="false" style="margin-bottom: 15px;">🐢 Modo lento para leer labios</button>
+            
+            <!-- SELECTOR DE VOCES EN EL AVATAR -->
+            <div style="width: 100%; text-align: left;">
+              <label for="voice-select" style="font-size: 0.9rem; font-weight: bold; color: var(--ink);">🗣️ Elegir voz:</label>
+              <select id="voice-select" style="width: 100%; padding: 10px; border-radius: 10px; border: 2px solid var(--line); margin-top: 5px; font-family: inherit;"></select>
+            </div>
           </div>
 
           <!-- TRADUCTOR -->
@@ -199,7 +215,6 @@
   <script src="assets/js/db.js"></script>
   <script src="assets/js/translator.js"></script>
   <script src="assets/js/predictor.js"></script>
-  <!-- ELIMINADO ia_avatar.js porque ahora está dentro de app.js -->
   <script src="assets/js/app.js" defer></script>
   <script>
     if ('serviceWorker' in navigator && location.protocol !== 'file:') {

@@ -8,7 +8,7 @@
 
 
 /* =======================================================
-   CSS ASISTENTE IA - AVATAR LIP-SYNC
+   CSS ASISTENTE IA - AVATAR LIP-SYNC Y SELECTORES DE VOZ
    ======================================================= */
 .avatar-layout {
   display: grid;
@@ -83,6 +83,26 @@
   background: var(--paper);
   color: var(--ink);
   cursor: pointer;
+}
+
+/* Estilos para los selectores de voz (tanto en el Avatar como en el Comunicador) */
+#voice-select, #main-voice-select {
+  background-color: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+#voice-select:focus, #main-voice-select:focus {
+  border-color: var(--blue) !important;
+}
+#voice-select optgroup, #main-voice-select optgroup {
+  font-weight: bold;
+  color: var(--ink);
+}
+#voice-select option, #main-voice-select option {
+  font-weight: normal;
+  padding: 5px;
 }
 
 .langs select { flex: 1; padding: 10px; border-radius: 10px; border: 2px solid var(--line); }

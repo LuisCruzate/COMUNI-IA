@@ -120,6 +120,7 @@
     $("#metricSelections").textContent=state.selections;$("#metricAccepted").textContent=state.accepted;$("#metricSpoken").textContent=state.spoken;
   }
 
+  // --- FUNCIÓN PARA HABLAR EN EL COMUNICADOR PRINCIPAL (CON SELECTOR DE VOZ) ---
   function speakMessage(){
     const message = Translator.buildSentence(state.tokens);
     if(!message){toast("Primero añade una palabra o una frase.");return;}
@@ -127,7 +128,19 @@
     if("speechSynthesis" in window){
         window.speechSynthesis.cancel();
         const utterance=new SpeechSynthesisUtterance(message);
-        utterance.lang="es-CO";utterance.rate=.88;
+        
+        const voiceSelect = document.getElementById('main-voice-select');
+        if (voiceSelect && voiceSelect.value !== "") {
+          const selectedVoice = window.speechSynthesis.getVoices()[voiceSelect.value];
+          if (selectedVoice) {
+            utterance.voice = selectedVoice;
+            utterance.lang = selectedVoice.lang;
+          }
+        } else {
+          utterance.lang = "es-CO";
+        }
+
+        utterance.rate=.88;
         window.speechSynthesis.speak(utterance);
         $("#speechStatus").textContent=`Reproduciendo: “${message}”`;
     } else {
@@ -136,7 +149,7 @@
     state.spoken++;record("Mensaje hablado",message);renderMetrics();
   }
 
-  // Event Listeners
+  // Event Listeners Generales
   $$(".nav-item[data-view]").forEach(button=>button.addEventListener("click",()=>{
     $$(".nav-item[data-view]").forEach(b=>b.classList.toggle("active",b===button));
     $$(".view").forEach(v=>v.classList.toggle("active",v.id===`view-${button.dataset.view}`));
@@ -181,7 +194,6 @@
   window.addEventListener("online",()=>{$("#connectionText").textContent="Conexión disponible";});
   window.addEventListener("offline",()=>{$("#connectionText").textContent="Modo sin conexión";});
 
-  // CONEXIÓN CON EL ASISTENTE IA (Avatar)
   document.addEventListener('comuni:frase-aceptada', (evento) => {
     const fraseAceptada = evento.detail.frase;
     addPhrase(fraseAceptada); 
@@ -271,17 +283,32 @@
     return out;
   }
 
+  // --- FUNCIÓN PARA HABLAR EN EL AVATAR (CON SELECTOR DE VOZ) ---
   function speakAvatar(text) {
     text = (text || '').trim(); if (!text) return;
     stopAvatar();
     if($id('caption')) $id('caption').textContent = text;
-    const rate = 0.9;
+    
+    const isSlow = $id('slow') && $id('slow').getAttribute('aria-pressed') === 'true';
+    const rate = isSlow ? 0.65 : 0.9;
+    
     Object.assign(sp, { on: true, paused: false, text, base: 0, t0: performance.now(), rate, idx: 0, vis: buildVis(text) });
     
     if ('speechSynthesis' in window) {
       const u = new SpeechSynthesisUtterance(text);
-      u.lang = "es-CO";
       u.rate = rate;
+      
+      const voiceSelect = $id('voice-select');
+      if (voiceSelect && voiceSelect.value !== "") {
+        const selectedVoice = speechSynthesis.getVoices()[voiceSelect.value];
+        if (selectedVoice) {
+          u.voice = selectedVoice;
+          u.lang = selectedVoice.lang;
+        }
+      } else {
+        u.lang = "es-CO";
+      }
+
       u.onend = u.onerror = () => finish();
       speechSynthesis.speak(u);
     }
@@ -324,7 +351,6 @@
 
   if($id('tFromBoard')) {
     $id('tFromBoard').onclick = () => { 
-      // CORREGIDO: S.msg ahora se obtiene del estado real
       const msg = state.tokens.map(t => t.word).join(" ");
       $id('tIn').value = msg; 
     };
@@ -342,8 +368,62 @@
     };
   }
 
-  drawMouth(0, 0);
   // =========================================================
+  // LÓGICA PARA LLENAR Y SINCRONIZAR LOS SELECTORES DE VOCES
+  // =========================================================
+  function populateVoices() {
+    const selectors = [document.getElementById('voice-select'), document.getElementById('main-voice-select')];
+    const voices = speechSynthesis.getVoices();
+    
+    selectors.forEach(voiceSelect => {
+      if (!voiceSelect) return;
+      
+      const currentValue = voiceSelect.value;
+      voiceSelect.innerHTML = '<option value="">Voz predeterminada del sistema</option>';
+      
+      const esVoices = voices.filter(v => v.lang.startsWith('es'));
+      const otherVoices = voices.filter(v => !v.lang.startsWith('es'));
+      
+      const addOptions = (voiceArray, label) => {
+        if (voiceArray.length === 0) return;
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = label;
+        voiceArray.forEach(voice => {
+          const option = document.createElement('option');
+          option.value = voices.indexOf(voice);
+          option.textContent = `${voice.name} (${voice.lang})`;
+          optgroup.appendChild(option);
+        });
+        voiceSelect.appendChild(optgroup);
+      };
 
+      addOptions(esVoices, "🇪🇸 Voces en Español");
+      addOptions(otherVoices, "🌍 Otros idiomas");
+      
+      if (currentValue) voiceSelect.value = currentValue;
+    });
+  }
+
+  function syncVoices(sourceSelect) {
+    const value = sourceSelect.value;
+    const otherSelect = sourceSelect.id === 'voice-select' ? document.getElementById('main-voice-select') : document.getElementById('voice-select');
+    if (otherSelect) otherSelect.value = value;
+  }
+
+  if ('speechSynthesis' in window) {
+    populateVoices();
+    speechSynthesis.onvoiceschanged = populateVoices;
+    
+    setTimeout(() => {
+      const vs1 = document.getElementById('voice-select');
+      const vs2 = document.getElementById('main-voice-select');
+      if (vs1) vs1.addEventListener('change', (e) => syncVoices(e.target));
+      if (vs2) vs2.addEventListener('change', (e) => syncVoices(e.target));
+    }, 500);
+  }
+
+  drawMouth(0, 0);
+  
+  // Arrancar la app
   init();
 })();
