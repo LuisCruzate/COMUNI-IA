@@ -1,0 +1,31 @@
+{
+  "name": "comuni-ia",
+  "version": "1.0.0",
+  "description": "Prototipo académico de interfaz para comunicación aumentativa y alternativa (CAA). La propuesta está construida con HTML semántico, CSS y JavaScript sin dependencias externas.",
+  "main": "sw.js",
+  "scripts": {
+    "build:web": "node scripts/build-web.mjs",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LuisCruzate/COMUNI-IA.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/LuisCruzate/COMUNI-IA/issues"
+  },
+  "homepage": "https://github.com/LuisCruzate/COMUNI-IA#readme",
+  "dependencies": {
+    "@capacitor-community/speech-recognition": "^7.0.1",
+    "@capacitor-community/text-to-speech": "^6.1.0",
+    "@capacitor/android": "^7.6.10",
+    "@capacitor/core": "^7.6.10"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.6.10",
+    "esbuild": "^0.25.12"
+  }
+}

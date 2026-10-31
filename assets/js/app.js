@@ -1,6 +1,9 @@
 (() => {
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const nativePlatform = window.ComuniIsNativePlatform === true;
+  const nativeTextToSpeech = nativePlatform ? window.ComuniNativeTextToSpeech : null;
+  let nativeVoices = [];
   
   const pictograms = [
     {word:"Agua",emoji:"💧",category:"necesidades"},{word:"Comida",emoji:"🍎",category:"necesidades"},{word:"Baño",emoji:"🚻",category:"necesidades"},{word:"Ayuda",emoji:"🙋",category:"necesidades"},{word:"Descansar",emoji:"🛋️",category:"necesidades"},{word:"Dolor",emoji:"🤕",category:"necesidades"},
@@ -135,16 +138,30 @@
   }
 
   // --- FUNCIÓN PARA HABLAR EN EL COMUNICADOR PRINCIPAL (CON SELECTOR DE VOZ) ---
-  function speakMessage(){
+  async function speakMessage(){
     const message = Translator.buildSentence(state.tokens);
     if(!message){toast("Primero añade una palabra o una frase.");return;}
-    
-    if("speechSynthesis" in window){
+
+    if (nativePlatform && nativeTextToSpeech) {
+      const voiceSelect = document.getElementById('main-voice-select');
+      const voiceIndex = voiceSelect && voiceSelect.value !== ""
+        ? Number(voiceSelect.value)
+        : undefined;
+      const selectedVoice = voiceIndex === undefined ? null : nativeVoices[voiceIndex];
+      try {
+        await speakAvatar(message, selectedVoice?.lang || "es-CO", null, .88, voiceIndex);
+        $("#speechStatus").textContent=`Reproduciendo: “${message}”`;
+      } catch (error) {
+        console.error("No se pudo reproducir el mensaje con la voz del sistema.", error);
+        $("#speechStatus").textContent=`No se pudo reproducir el mensaje: ${error.message || "comprueba el motor de texto a voz de Android"}.`;
+        return;
+      }
+    } else if("speechSynthesis" in window){
         const voiceSelect = document.getElementById('main-voice-select');
         const selectedVoice = voiceSelect && voiceSelect.value !== ""
           ? window.speechSynthesis.getVoices()[voiceSelect.value]
           : null;
-        speakAvatar(message, selectedVoice ? selectedVoice.lang : "es-CO", selectedVoice, .88);
+        await speakAvatar(message, selectedVoice ? selectedVoice.lang : "es-CO", selectedVoice, .88);
         $("#speechStatus").textContent=`Reproduciendo: “${message}”`;
     } else {
         $("#speechStatus").textContent=`Mensaje listo: “${message}”. Este navegador no ofrece voz automática.`;
@@ -362,8 +379,12 @@
   const kick = () => { if (!running) { running = true; requestAnimationFrame(loop); } };
   function finish() { lastVis = ''; if($id('vis')) $id('vis').textContent = ''; sp.on = false; sp.paused = false; document.body.classList.remove('avatar-speaking'); kick(); }
   
-  function stopAvatar() { 
-    if ('speechSynthesis' in window) speechSynthesis.cancel(); 
+  async function stopAvatar() {
+    if (nativePlatform && nativeTextToSpeech && sp.on) {
+      await nativeTextToSpeech.stop();
+    } else if (!nativePlatform && 'speechSynthesis' in window) {
+      speechSynthesis.cancel();
+    }
     finish(); 
   }
 
@@ -373,10 +394,19 @@
     return out;
   }
 
+  function resolveNativeLanguage(language, voice) {
+    if (voice?.lang) return voice.lang;
+    if (!language) return "es-CO";
+    const normalized = language.toLowerCase();
+    return nativeVoices.find(item => item.lang.toLowerCase() === normalized)?.lang
+      || nativeVoices.find(item => item.lang.toLowerCase().startsWith(normalized.split("-")[0]))?.lang
+      || language;
+  }
+
   // --- FUNCIÓN PARA HABLAR EN EL AVATAR (CON SELECTOR DE VOZ) ---
-  function speakAvatar(text, language, preferredVoice, requestedRate) {
+  async function speakAvatar(text, language, preferredVoice, requestedRate, preferredNativeVoice) {
     text = (text || '').trim(); if (!text) return;
-    stopAvatar();
+    await stopAvatar();
     document.body.classList.add('avatar-speaking');
     if($id('caption')) $id('caption').textContent = text;
     
@@ -385,7 +415,32 @@
     
     Object.assign(sp, { on: true, paused: false, text, base: 0, t0: performance.now(), rate, idx: 0, vis: buildVis(text) });
     
-    if ('speechSynthesis' in window) {
+    if (nativePlatform && nativeTextToSpeech) {
+      const voiceSelect = $id('voice-select');
+      const selectedVoiceIndex = preferredNativeVoice !== undefined
+        ? preferredNativeVoice
+        : !language && voiceSelect && voiceSelect.value !== ""
+          ? Number(voiceSelect.value)
+          : undefined;
+      const selectedNativeVoice = selectedVoiceIndex === undefined
+        ? null
+        : nativeVoices[selectedVoiceIndex];
+      try {
+        await nativeTextToSpeech.speak({
+          text,
+          lang: resolveNativeLanguage(language, selectedNativeVoice),
+          rate,
+          pitch: 1,
+          volume: 1,
+          voice: selectedVoiceIndex,
+          queueStrategy: 0
+        });
+      } catch (error) {
+        finish();
+        throw error;
+      }
+      finish();
+    } else if ('speechSynthesis' in window) {
       const u = new SpeechSynthesisUtterance(text);
       u.rate = rate;
       
@@ -470,7 +525,15 @@
   }
 
   if($id('tSpeak')) {
-    $id('tSpeak').onclick = () => { if (lastTr) speakAvatar(lastTr); };
+    $id('tSpeak').onclick = async () => {
+      if (!lastTr) return;
+      try {
+        await speakAvatar(lastTr);
+      } catch (error) {
+        console.error("No se pudo leer la traducción en voz alta.", error);
+        $id('tOut').textContent = `Traducción lista, pero no se pudo reproducir: ${error.message || "comprueba el motor de texto a voz de Android"}.`;
+      }
+    };
   }
 
   if($id('slow')) {
@@ -484,9 +547,23 @@
   // =========================================================
   // LÓGICA PARA LLENAR Y SINCRONIZAR LOS SELECTORES DE VOCES
   // =========================================================
-  function populateVoices() {
+  async function populateVoices() {
     const selectors = [document.getElementById('voice-select'), document.getElementById('main-voice-select')];
-    const voices = speechSynthesis.getVoices();
+    let voices;
+    if (nativePlatform && nativeTextToSpeech) {
+      try {
+        const result = await nativeTextToSpeech.getSupportedVoices();
+        nativeVoices = result.voices;
+        voices = nativeVoices;
+      } catch (error) {
+        console.error("No se pudieron cargar las voces nativas disponibles.", error);
+        voices = [];
+      }
+    } else if ('speechSynthesis' in window) {
+      voices = speechSynthesis.getVoices();
+    } else {
+      voices = [];
+    }
     
     selectors.forEach(voiceSelect => {
       if (!voiceSelect) return;
@@ -523,7 +600,9 @@
     if (otherSelect) otherSelect.value = value;
   }
 
-  if ('speechSynthesis' in window) {
+  if (nativePlatform && nativeTextToSpeech) {
+    void populateVoices();
+  } else if ('speechSynthesis' in window) {
     populateVoices();
     speechSynthesis.onvoiceschanged = populateVoices;
     
@@ -568,7 +647,7 @@
       );
       conversationResponse.textContent = `Respuesta traducida: ${translated}`;
       try {
-        window.ComuniTranslation.hablarTexto(translated, conversationLanguage.selectedOptions[0].dataset.locale);
+        await window.ComuniTranslation.hablarTexto(translated, conversationLanguage.selectedOptions[0].dataset.locale);
         conversationStatus.textContent = "Tu respuesta traducida se está leyendo en voz alta.";
       } catch (error) {
         console.error("La traducción se completó, pero no se pudo reproducir la voz.", error);

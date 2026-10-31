@@ -10,7 +10,7 @@ Prototipo académico de interfaz para comunicación aumentativa y alternativa (C
 ## Funciones incluidas
 - Tablero de pictogramas con categorías y búsqueda.
 - Construcción de mensajes mediante pictogramas o texto.
-- Síntesis de voz del navegador cuando está disponible.
+- Síntesis de voz con el sistema nativo en Android Capacitor y con Web Speech API en navegador.
 - Conversación bilingüe con reconocimiento de voz, traducción en línea y lectura de la respuesta en el idioma seleccionado, con animación labial del avatar. Las traducciones requieren internet; el endpoint público de Google usado en este prototipo no es una API contractual para producción.
 - Sugerencias de frases de ejemplo.
 - Deshacer la última palabra.
