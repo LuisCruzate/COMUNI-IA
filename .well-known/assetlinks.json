@@ -3,6 +3,6 @@
   "target": {
     "namespace": "android_app",
     "package_name": "com.luiscruzate.comunia",
-    "sha256_cert_fingerprints": [""]
+    "sha256_cert_fingerprints": ["B3:BE:CE:32:B8:80:CE:33:1A:18:32:6D:18:95:36:D7:7F:21:FA:B2:2E:B2:93:86:96:71:C9:A2:D8:E8:CE:BA"]
   }
 }]
