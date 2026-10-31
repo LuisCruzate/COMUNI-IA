@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#1D4E89">
+  <meta name="theme-color" content="#1D4E89" id="themeColor">
   <meta name="description" content="COMUNI-AI: herramienta de comunicación aumentativa y alternativa.">
   <title>COMUNI-AI | Tus palabras, a tu ritmo</title>
   <link rel="manifest" href="manifest.webmanifest">
@@ -54,6 +54,11 @@
             <p class="eyebrow">ESPACIO PERSONAL</p>
             <h1 id="pageTitle">¿Qué quieres decir hoy?</h1>
             <p class="lead">Toca una imagen, escribe una palabra o elige una frase para empezar.</p>
+            <aside class="onboarding-tip" id="onboardingTip" role="note" hidden>
+              <span aria-hidden="true">✨</span>
+              <p><strong>¡Empecemos!</strong> Elige una categoría, toca un pictograma y pulsa <strong>Hablar</strong> para compartir tu mensaje.</p>
+              <button class="onboarding-dismiss" id="dismissOnboarding" type="button" aria-label="Cerrar ayuda">×</button>
+            </aside>
           </div>
           <div class="date-pill"><span aria-hidden="true">☀</span> Comunicación sin prisa</div>
         </div>
@@ -65,15 +70,18 @@
           </div>
           
           <div class="message-composition" id="messageTokens" aria-live="polite" aria-label="Mensaje en construcción">
-            <span class="empty-message">Tus palabras aparecerán aquí…</span>
+            <span class="empty-message">Toca un pictograma para empezar…</span>
           </div>
           
-          <div class="message-controls">
-            <label class="sr-only" for="typedWord">Escribe una palabra o frase</label>
-            <input id="typedWord" type="text" maxlength="100" placeholder="También puedes escribir aquí…" autocomplete="off">
-            <button class="button button-secondary" id="addWordButton" type="button">Añadir palabra</button>
-            <button class="button button-primary" id="speakButton" type="button"><span aria-hidden="true">🔊</span> Hablar</button>
-          </div>
+          <details class="keyboard-panel">
+            <summary><span aria-hidden="true">⌨️</span> Escribir con el teclado</summary>
+            <div class="message-controls">
+              <label class="sr-only" for="typedWord">Escribe una palabra o frase</label>
+              <input id="typedWord" type="text" maxlength="100" placeholder="También puedes escribir aquí…" autocomplete="off">
+              <button class="button button-secondary" id="addWordButton" type="button">Añadir palabra</button>
+              <button class="button button-primary" id="speakButton" type="button"><span aria-hidden="true">🔊</span> Hablar</button>
+            </div>
+          </details>
           
           <!-- SELECTOR DE VOZ PARA EL COMUNICADOR PRINCIPAL -->
           <div style="display: flex; align-items: center; gap: 10px; background: #f8fafc; padding: 10px; border-radius: 10px; border: 1px solid var(--line); margin-top: 15px;">
@@ -112,6 +120,11 @@
           <div class="pictogram-grid" id="pictogramGrid" aria-label="Pictogramas disponibles"></div>
           <p class="board-note">Este tablero es una muestra para el prototipo. Los pictogramas pueden personalizarse según las necesidades de cada persona.</p>
         </section>
+
+        <div class="communicate-avatar-dock" id="communicate-avatar-slot" role="group" aria-label="Avatar y botón para hablar">
+          <span class="dock-hint">Tu mensaje, con tu voz</span>
+          <button class="speak-fab" id="mobileSpeakButton" type="button" aria-label="Hablar el mensaje" title="Hablar el mensaje"><span aria-hidden="true">🔊</span></button>
+        </div>
       </section>
 
       <!-- VISTA 2: MIS FRASES -->
@@ -158,6 +171,20 @@
                 <path d="M186 30C190 48 190 56 186 64M214 30C210 48 210 56 214 64" stroke="#d98f6c" stroke-width="5" fill="none" stroke-linecap="round" opacity=".6"/>
                 <ellipse cx="200" cy="292" rx="70" ry="10" fill="#d98f6c" opacity=".5"/>
                 <g filter="url(#bl)" opacity=".45"><ellipse cx="200" cy="262" rx="70" ry="14" fill="#b86b4a"/><path d="M86 70C70 130 90 210 120 250M314 70C330 130 310 210 280 250" stroke="#c98563" stroke-width="14" fill="none"/></g>
+                <circle class="cheek-glow" cx="105" cy="177" r="20" fill="#fb7185"/>
+                <circle class="cheek-glow" cx="295" cy="177" r="20" fill="#fb7185"/>
+                <g aria-hidden="true">
+                  <ellipse cx="145" cy="101" rx="23" ry="13" fill="#fffaf4"/>
+                  <ellipse cx="255" cy="101" rx="23" ry="13" fill="#fffaf4"/>
+                  <circle cx="145" cy="101" r="7" fill="#334155"/>
+                  <circle cx="255" cy="101" r="7" fill="#334155"/>
+                  <circle cx="147" cy="99" r="2" fill="#fff"/>
+                  <circle cx="257" cy="99" r="2" fill="#fff"/>
+                </g>
+                <g class="avatar-eyelids" aria-hidden="true">
+                  <ellipse cx="145" cy="101" rx="24" ry="14" fill="#edb48f"/>
+                  <ellipse cx="255" cy="101" rx="24" ry="14" fill="#edb48f"/>
+                </g>
                 <path id="cav" fill="#1c0405"/>
                 <g clip-path="url(#clip)">
                   <rect id="tU" fill="url(#gT)" rx="12"/><rect id="tL" fill="#dcdce0" rx="10"/><ellipse id="tg" fill="#c4474f"/>
@@ -245,6 +272,42 @@
       <footer class="footer"><span>COMUNI-AI · Prototipo de comunicación aumentativa</span><span>Diseñado para ser claro, accesible y fácil de usar</span></footer>
     </main>
   </div>
+
+  <nav class="bottom-nav" aria-label="Navegación principal">
+    <button class="nav-item bottom-nav-item active" data-view="communicate" data-destination="communicate" type="button" aria-current="page">
+      <span class="nav-icon" aria-hidden="true">▦</span><span>Comunicar</span>
+    </button>
+    <button class="nav-item bottom-nav-item" data-view="avatar" data-destination="avatar" type="button" aria-current="false">
+      <span class="nav-icon" aria-hidden="true">👄</span><span>Avatar</span>
+    </button>
+    <button class="nav-item bottom-nav-item" data-view="translation" data-destination="translation" type="button" aria-current="false">
+      <span class="nav-icon" aria-hidden="true">🌐</span><span>Traductor</span>
+    </button>
+    <button class="bottom-nav-item" id="settingsNavButton" data-destination="settings" type="button" aria-expanded="false" aria-controls="appSettingsSheet">
+      <span class="nav-icon" aria-hidden="true">⚙</span><span>Ajustes</span>
+    </button>
+  </nav>
+
+  <dialog class="settings-sheet" id="appSettingsSheet" aria-labelledby="settingsTitle">
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-heading">
+      <div><p class="eyebrow">PERSONALIZA TU ESPACIO</p><h2 id="settingsTitle">Ajustes</h2></div>
+      <button class="icon-button" id="closeSettingsSheet" type="button" aria-label="Cerrar ajustes">×</button>
+    </div>
+    <div class="setting-row">
+      <div><strong>Modo oscuro</strong><small>Reduce el brillo de la pantalla</small></div>
+      <button class="setting-toggle" id="darkModeToggle" type="button" aria-pressed="false">Activar</button>
+    </div>
+    <div class="setting-row">
+      <div><strong>Alto contraste</strong><small>Resalta textos y controles</small></div>
+      <button class="setting-toggle" id="settingsContrastToggle" type="button" aria-pressed="false">Activar</button>
+    </div>
+    <div class="settings-links" aria-label="Más opciones">
+      <button class="nav-item settings-link" data-view="phrases" type="button"><span class="nav-icon" aria-hidden="true">☷</span> Mis frases</button>
+      <button class="nav-item settings-link" data-view="history" type="button"><span class="nav-icon" aria-hidden="true">↶</span> Historial</button>
+      <button class="nav-item settings-link" data-view="admin" type="button"><span class="nav-icon" aria-hidden="true">▤</span> Área de investigación</button>
+    </div>
+  </dialog>
   
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   

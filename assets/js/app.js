@@ -10,6 +10,19 @@
   ];
   
   const state = {tokens:[],history:[],phrases:[],category:"todo",selections:0,accepted:0,spoken:0};
+  const mobileViewport = window.matchMedia("(max-width: 760px)");
+
+  function relocateAvatar(view) {
+    const avatar = $("#main-avatar-visual");
+    if (!avatar) return;
+    if (view === "avatar") $("#avatar-slot").append(avatar);
+    else if (view === "translation") $("#translation-avatar-slot").append(avatar);
+    else if (view === "communicate") {
+      const slot=$(mobileViewport.matches ? "#communicate-avatar-slot" : "#avatar-slot");
+      if (mobileViewport.matches) slot.prepend(avatar);
+      else slot.append(avatar);
+    }
+  }
 
   async function init() {
     const savedHistory = await DB.getAll('history');
@@ -57,7 +70,7 @@
 
   function renderTokens(){
     const container=$("#messageTokens");container.innerHTML="";
-    if(!state.tokens.length){const empty=document.createElement("span");empty.className="empty-message";empty.textContent="Tus palabras aparecerán aquí…";container.append(empty);}
+    if(!state.tokens.length){const empty=document.createElement("span");empty.className="empty-message";empty.textContent="Toca un pictograma para empezar…";container.append(empty);}
     state.tokens.forEach((token,index)=>{
       const chip=document.createElement("span");chip.className="message-token";
       const text=document.createElement("span");text.textContent=(token.emoji?token.emoji+" ":"")+token.word;
@@ -77,6 +90,7 @@
 
   async function addToken(word,emoji=""){
     const clean=String(word).trim();if(!clean)return;
+    if (navigator.vibrate) navigator.vibrate(50);
     state.tokens.push({word:clean,emoji});state.selections++;
     renderTokens();
     await record("Palabra añadida",clean);
@@ -126,22 +140,11 @@
     if(!message){toast("Primero añade una palabra o una frase.");return;}
     
     if("speechSynthesis" in window){
-        window.speechSynthesis.cancel();
-        const utterance=new SpeechSynthesisUtterance(message);
-        
         const voiceSelect = document.getElementById('main-voice-select');
-        if (voiceSelect && voiceSelect.value !== "") {
-          const selectedVoice = window.speechSynthesis.getVoices()[voiceSelect.value];
-          if (selectedVoice) {
-            utterance.voice = selectedVoice;
-            utterance.lang = selectedVoice.lang;
-          }
-        } else {
-          utterance.lang = "es-CO";
-        }
-
-        utterance.rate=.88;
-        window.speechSynthesis.speak(utterance);
+        const selectedVoice = voiceSelect && voiceSelect.value !== ""
+          ? window.speechSynthesis.getVoices()[voiceSelect.value]
+          : null;
+        speakAvatar(message, selectedVoice ? selectedVoice.lang : "es-CO", selectedVoice, .88);
         $("#speechStatus").textContent=`Reproduciendo: “${message}”`;
     } else {
         $("#speechStatus").textContent=`Mensaje listo: “${message}”. Este navegador no ofrece voz automática.`;
@@ -153,15 +156,96 @@
   $$(".nav-item[data-view]").forEach(button=>button.addEventListener("click",()=>{
     $$(".nav-item[data-view]").forEach(b=>b.classList.toggle("active",b===button));
     $$(".view").forEach(v=>v.classList.toggle("active",v.id===`view-${button.dataset.view}`));
-    const avatar = $("#main-avatar-visual");
-    if (avatar && button.dataset.view === "translation") {
-      $("#translation-avatar-slot").append(avatar);
-    } else if (avatar && button.dataset.view === "avatar") {
-      $("#avatar-slot").append(avatar);
-    }
+    relocateAvatar(button.dataset.view);
+    const destination = ["phrases","history","admin"].includes(button.dataset.view) ? "settings" : button.dataset.view;
+    $$(".bottom-nav-item[data-destination]").forEach(item=>{
+      const current = item.dataset.destination === destination;
+      item.classList.toggle("active",current);
+      item.setAttribute("aria-current",current ? "page" : "false");
+    });
+    if ($("#appSettingsSheet").open) $("#appSettingsSheet").close();
+    $("#settingsNavButton").setAttribute("aria-expanded","false");
     if(button.dataset.view==="phrases")renderPhrases();if(button.dataset.view==="history")renderHistory();if(button.dataset.view==="admin")renderMetrics();
     const heading=$(`#view-${button.dataset.view} h1`);if(heading)heading.setAttribute("tabindex","-1"),heading.focus({preventScroll:true});
   }));
+
+  const relocateActiveAvatar = () => relocateAvatar($(".view.active")?.id.replace("view-",""));
+  if (mobileViewport.addEventListener) mobileViewport.addEventListener("change",relocateActiveAvatar);
+  else mobileViewport.addListener(relocateActiveAvatar);
+  relocateAvatar("communicate");
+
+  $("#mobileSpeakButton").addEventListener("click",speakMessage);
+
+  const onboardingTip = $("#onboardingTip");
+  try {
+    if (localStorage.getItem("comuniAiOnboardingSeen") !== "true") onboardingTip.hidden = false;
+  } catch (error) {
+    console.warn("No se pudo leer la preferencia de ayuda inicial.", error);
+    onboardingTip.hidden = false;
+  }
+  $("#dismissOnboarding").addEventListener("click",()=>{
+    onboardingTip.hidden = true;
+    try {
+      localStorage.setItem("comuniAiOnboardingSeen","true");
+    } catch (error) {
+      console.warn("No se pudo guardar que la ayuda inicial fue cerrada.", error);
+    }
+  });
+
+  const settingsSheet = $("#appSettingsSheet");
+  const settingsNavButton = $("#settingsNavButton");
+  settingsNavButton.addEventListener("click",()=>{
+    settingsSheet.showModal();
+    settingsNavButton.setAttribute("aria-expanded","true");
+    $$(".bottom-nav-item[data-destination]").forEach(item=>{
+      const current = item.dataset.destination === "settings";
+      item.classList.toggle("active",current);
+      item.setAttribute("aria-current",current ? "page" : "false");
+    });
+  });
+  $("#closeSettingsSheet").addEventListener("click",()=>settingsSheet.close());
+  settingsSheet.addEventListener("close",()=>{
+    settingsNavButton.setAttribute("aria-expanded","false");
+    const activeView=$(".view.active")?.id.replace("view-","");
+    const destination=["phrases","history","admin"].includes(activeView) ? "settings" : activeView;
+    $$(".bottom-nav-item[data-destination]").forEach(item=>{
+      const current=item.dataset.destination===destination;
+      item.classList.toggle("active",current);
+      item.setAttribute("aria-current",current ? "page" : "false");
+    });
+  });
+  $("#settingsContrastToggle").addEventListener("click",()=>$("#contrastToggle").click());
+  $("#contrastToggle").addEventListener("click",()=>{
+    const toggle=$("#settingsContrastToggle");
+    const active=document.body.classList.contains("high-contrast");
+    toggle.setAttribute("aria-pressed",String(active));
+    toggle.textContent=active ? "Desactivar" : "Activar";
+  });
+
+  const darkModeToggle = $("#darkModeToggle");
+  const themeColor = $("#themeColor");
+  function setDarkMode(active) {
+    document.body.classList.toggle("dark-mode",active);
+    darkModeToggle.setAttribute("aria-pressed",String(active));
+    darkModeToggle.textContent=active ? "Desactivar" : "Activar";
+    themeColor.setAttribute("content",active ? "#111827" : "#1D4E89");
+  }
+  let savedTheme = null;
+  try {
+    savedTheme = localStorage.getItem("comuniAiTheme");
+  } catch (error) {
+    console.warn("No se pudo leer la preferencia de tema.", error);
+  }
+  setDarkMode(savedTheme ? savedTheme === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches);
+  darkModeToggle.addEventListener("click",()=>{
+    const active=darkModeToggle.getAttribute("aria-pressed") !== "true";
+    setDarkMode(active);
+    try {
+      localStorage.setItem("comuniAiTheme",active ? "dark" : "light");
+    } catch (error) {
+      console.warn("No se pudo guardar la preferencia de tema.", error);
+    }
+  });
   
   $$(".category-tab").forEach(button=>button.addEventListener("click",()=>{state.category=button.dataset.category;$$(".category-tab").forEach(b=>b.classList.toggle("active",b===button));renderBoard();}));
   
@@ -276,7 +360,7 @@
     else { running = false; drawMouth(0, 0); }
   }
   const kick = () => { if (!running) { running = true; requestAnimationFrame(loop); } };
-  function finish() { lastVis = ''; if($id('vis')) $id('vis').textContent = ''; sp.on = false; sp.paused = false; kick(); }
+  function finish() { lastVis = ''; if($id('vis')) $id('vis').textContent = ''; sp.on = false; sp.paused = false; document.body.classList.remove('avatar-speaking'); kick(); }
   
   function stopAvatar() { 
     if ('speechSynthesis' in window) speechSynthesis.cancel(); 
@@ -290,13 +374,14 @@
   }
 
   // --- FUNCIÓN PARA HABLAR EN EL AVATAR (CON SELECTOR DE VOZ) ---
-  function speakAvatar(text, language) {
+  function speakAvatar(text, language, preferredVoice, requestedRate) {
     text = (text || '').trim(); if (!text) return;
     stopAvatar();
+    document.body.classList.add('avatar-speaking');
     if($id('caption')) $id('caption').textContent = text;
     
     const isSlow = $id('slow') && $id('slow').getAttribute('aria-pressed') === 'true';
-    const rate = isSlow ? 0.65 : 0.9;
+    const rate = isSlow ? 0.65 : requestedRate || 0.9;
     
     Object.assign(sp, { on: true, paused: false, text, base: 0, t0: performance.now(), rate, idx: 0, vis: buildVis(text) });
     
@@ -305,7 +390,10 @@
       u.rate = rate;
       
       const voiceSelect = $id('voice-select');
-      if (language) {
+      if (preferredVoice) {
+        u.voice = preferredVoice;
+        u.lang = preferredVoice.lang;
+      } else if (language) {
         const languagePrefix = language.split("-")[0].toLowerCase();
         const matchingVoice = speechSynthesis.getVoices().find(voice =>
           voice.lang.toLowerCase().startsWith(languagePrefix)
@@ -337,23 +425,34 @@
     Object.entries(LANGS_AV).forEach(([k, name]) => sel.add(new Option(name, k, false, k === (n ? 'en' : 'es')))); 
   });
 
-  const translateAvatar = async (text, from, to) => {
-    if (from === to) return text;
-    try {
-      const r = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${from}&tl=${to}&dt=t&q=${encodeURIComponent(text)}`);
-      const j = await r.json();
-      return j[0].map(x => x[0]).join('').trim();
-    } catch { return "Error de conexión."; }
-  };
-
   let lastTr = '';
   if($id('tGo')) {
-    $id('tGo').onclick = async () => {
-      const t = $id('tIn').value.trim(); if (!t) return; 
-      $id('tOut').textContent = 'Traduciendo…';
-      const r = await translateAvatar(t, $id('from').value, $id('to').value);
-      lastTr = r || ''; $id('tOut').textContent = r || 'Error.';
-    };
+    $id('tGo').addEventListener('click', async () => {
+      const input = $id('tIn');
+      const output = $id('tOut');
+      const button = $id('tGo');
+      const text = input.value.trim();
+      if (!text) {
+        output.textContent = "Escribe un texto para traducir.";
+        input.focus();
+        return;
+      }
+
+      button.disabled = true;
+      lastTr = '';
+      output.textContent = 'Traduciendo…';
+      try {
+        lastTr = await Translator.translateText(text, $id('from').value, $id('to').value);
+        output.textContent = lastTr;
+      } catch (error) {
+        console.error("No se pudo traducir el texto del traductor.", error);
+        output.textContent = !navigator.onLine
+          ? "Sin conexión a internet. Conéctate e inténtalo de nuevo."
+          : `No se pudo traducir: ${error.message}`;
+      } finally {
+        button.disabled = false;
+      }
+    });
   }
 
   if($id('swap')) {
@@ -477,8 +576,10 @@
       }
     } catch (error) {
       console.error("No se pudo traducir la respuesta.", error);
-      conversationResponse.textContent = "No se pudo traducir la respuesta. Revisa tu conexión e inténtalo de nuevo.";
-      conversationStatus.textContent = "Error de traducción.";
+      conversationResponse.textContent = !navigator.onLine
+        ? "Sin conexión. La traducción necesita internet."
+        : `No se pudo traducir: ${error.message}`;
+      conversationStatus.textContent = "Error de traducción. Revisa el mensaje e inténtalo otra vez.";
     } finally {
       conversationSpeakButton.disabled = false;
     }

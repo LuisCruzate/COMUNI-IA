@@ -28,5 +28,32 @@ const Translator = {
     const words = text.split(" ");
     const translated = words.map(w => this.dictionary[w] || w);
     return translated.join(" ");
+  },
+
+  async translateText(text, languageFrom, languageTo) {
+    const cleanText = String(text || "").trim();
+    if (!cleanText) throw new Error("Escribe un texto para traducir.");
+    if (languageFrom === languageTo) return cleanText;
+    if (!navigator.onLine) throw new Error("No hay conexión a internet.");
+
+    const params = new URLSearchParams({
+      client: "gtx",
+      sl: languageFrom,
+      tl: languageTo,
+      dt: "t",
+      q: cleanText
+    });
+    const response = await fetch(`https://translate.googleapis.com/translate_a/single?${params}`);
+    if (!response.ok) {
+      throw new Error(`El servicio de traducción respondió con HTTP ${response.status}.`);
+    }
+
+    const data = await response.json();
+    const segments = data?.[0];
+    const translation = Array.isArray(segments)
+      ? segments.map(segment => segment?.[0] || "").join("").trim()
+      : "";
+    if (!translation) throw new Error("El servicio no devolvió una traducción válida.");
+    return translation;
   }
 };

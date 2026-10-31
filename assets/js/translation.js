@@ -28,27 +28,7 @@
   }
 
   async function traducirTexto(texto, idiomaOrigen, idiomaDestino) {
-    const cleanText = String(texto || "").trim();
-    if (!cleanText) throw new Error("No hay texto para traducir.");
-    if (!navigator.onLine) throw new Error("No hay conexión a internet.");
-
-    const params = new URLSearchParams({
-      client: "gtx",
-      sl: idiomaOrigen,
-      tl: idiomaDestino,
-      dt: "t",
-      q: cleanText
-    });
-    const response = await fetch(`https://translate.googleapis.com/translate_a/single?${params}`);
-    if (!response.ok) throw new Error(`El servicio de traducción respondió con HTTP ${response.status}.`);
-
-    const data = await response.json();
-    const segments = data?.[0];
-    const translation = Array.isArray(segments)
-      ? segments.map(segment => segment?.[0] || "").join("").trim()
-      : "";
-    if (!translation) throw new Error("El servicio no devolvió una traducción válida.");
-    return translation;
+    return Translator.translateText(texto, idiomaOrigen, idiomaDestino);
   }
 
   function hablarTexto(texto, idioma) {
@@ -77,9 +57,10 @@
       hablarTexto(translation, "es-ES");
     } catch (error) {
       console.error("No se pudo traducir el mensaje entrante.", error);
+      resultRegion.textContent = `No se pudo traducir: ${error.message}`;
       statusRegion.textContent = !navigator.onLine
         ? "Sin conexión. El texto se escuchó, pero la traducción necesita internet."
-        : "No se pudo traducir el mensaje. Revisa tu conexión e inténtalo de nuevo.";
+        : "No se pudo traducir el mensaje. Revisa el texto y tu conexión e inténtalo de nuevo.";
     } finally {
       translating = false;
     }
